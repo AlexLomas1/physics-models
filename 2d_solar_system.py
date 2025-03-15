@@ -6,7 +6,7 @@ class Planet:
     def __init__(self, orbit_radius, orbital_period, marker):
         self.orbit_radius = orbit_radius # In AU
         self.orbital_period = orbital_period # In earth years
-        self.velocity = 2 * math.pi * orbit_radius / orbital_period 
+        self.angular_velocity = 2 * math.pi / orbital_period 
         self.marker = marker
 
 # Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/planet_table_ratio.html
@@ -37,12 +37,12 @@ for planet in planets:
 
 def update(frame_num):
     # Updates Earth's position
-    t = frame_num * 0.0075  # Used to determine speed of simulation.
+    t = frame_num * 0.05  # Used to determine speed of simulation.
 
     # Parametric equation (r*sin(v*t), r*cos(v*t)), with r and v as constants, used to draw circular orbit.
     for planet in planets:
-        x = planet.orbit_radius * math.sin(planet.velocity * t)
-        y = planet.orbit_radius * math.cos(planet.velocity * t)
+        x = planet.orbit_radius * math.sin(planet.angular_velocity * t)
+        y = planet.orbit_radius * math.cos(planet.angular_velocity * t)
         planet.marker.set_data([x], [y])
     
     return [planet.marker for planet in planets]
