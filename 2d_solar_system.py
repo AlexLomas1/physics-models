@@ -2,34 +2,53 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import math
 
+class Planet:
+    def __init__(self, orbit_radius, orbital_period, marker):
+        self.orbit_radius = orbit_radius # In AU
+        self.orbital_period = orbital_period # In earth years
+        self.velocity = 2 * math.pi * orbit_radius / orbital_period 
+        self.marker = marker
+
+# Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/planet_table_ratio.html
+Mercury = Planet(0.387, 0.241, None)
+Venus = Planet(0.723, 0.615, None)
+Earth = Planet(1, 1, None)
+Mars = Planet(1.52, 1.88, None)
+Jupiter = Planet(5.20, 11.9, None)
+Saturn = Planet(9.57, 29.4, None)
+Uranus = Planet(19.17, 83.7, None)
+Neptune = Planet(30.18, 163.7, None)
+
+planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
+
 # Setup figure
 fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_xlim(-2, 2)
-ax.set_ylim(-2, 2)
+ax.set_xlim(-35, 35)
+ax.set_ylim(-35, 35)
 ax.set_aspect("equal")
 ax.set_facecolor("black")
 
 # Plotting the sun at position [0, 0]
 ax.plot(0, 0, color="yellow", marker ="o", markersize=15) 
 
-# Creating marker for Earth
-earth_marker, = ax.plot([], [], color="blue", marker="o", markersize=5)
-
-earth_velocity = 2 * math.pi # Planet velocity determined by 2πr/orbital period, with r in AU and
-# orbital period in (Earth) years. As r and orbital period are both 1 for Earth, v is just 2π. 
+# Creating markers for the planets
+for planet in planets:
+    planet.marker, = ax.plot([], [], color="blue", marker="o", markersize=5)
 
 def update(frame_num):
     # Updates Earth's position
-    t = frame_num * 0.0075  # Used to determine speed of simulation
+    t = frame_num * 0.0075  # Used to determine speed of simulation.
 
-    # Parametric equation (sin(v*t), cos(v*t)), with v as a constant, used to draw circular orbit
-    x = math.sin(earth_velocity * t)
-    y = math.cos(earth_velocity * t)
-    earth_marker.set_data([x], [y])
+    # Parametric equation (r*sin(v*t), r*cos(v*t)), with r and v as constants, used to draw circular orbit.
+    for planet in planets:
+        x = planet.orbit_radius * math.sin(planet.velocity * t)
+        y = planet.orbit_radius * math.cos(planet.velocity * t)
+        planet.marker.set_data([x], [y])
     
-    return [earth_marker]
+    return [planet.marker for planet in planets]
 
 # Create animation
+# Note: may need to increase number of frames later to allow animation to last longer.
 ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
 
 plt.show()
