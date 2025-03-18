@@ -20,12 +20,12 @@ Saturn = Planet(9.57, 29.4, None)
 Uranus = Planet(19.17, 83.7, None)
 Neptune = Planet(30.18, 163.7, None)
 
-planets = [Earth] # Only using earth at the moment, just to test communication with backend works
+planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
 
 # Setup figure
 fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_xlim(-1.5, 1.5)
-ax.set_ylim(-1.5, 1.5)
+ax.set_xlim(-35, 35)
+ax.set_ylim(-35, 35)
 ax.set_aspect("equal")
 ax.set_facecolor("black")
 
@@ -46,13 +46,14 @@ def update(frame_num):
     if not line:
         return [planet.marker for planet in planets] # Stop if no more data.
     
-    # Updating Earth's position
     values = line.split()
     for i in range(len(values)):
         values[i] = float(values[i])
-    x, y = values
-
-    Earth.marker.set_data([x], [y])
+    
+    # Updating position of each planet
+    for i in range(8):
+        x, y = values[2*i], values[(2*i)+1]
+        planets[i].marker.set_data([x], [y])
 
     return [planet.marker for planet in planets]
 
