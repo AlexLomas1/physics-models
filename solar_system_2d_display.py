@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import math
+import subprocess
 
 class Planet:
     def __init__(self, orbit_radius, orbital_period, marker):
@@ -19,12 +20,12 @@ Saturn = Planet(9.57, 29.4, None)
 Uranus = Planet(19.17, 83.7, None)
 Neptune = Planet(30.18, 163.7, None)
 
-planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
+planets = [Earth] # Only using earth at the moment, just to test communication with backend works
 
 # Setup figure
 fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_xlim(-35, 35)
-ax.set_ylim(-35, 35)
+ax.set_xlim(-1.5, 1.5)
+ax.set_ylim(-1.5, 1.5)
 ax.set_aspect("equal")
 ax.set_facecolor("black")
 
@@ -35,16 +36,24 @@ ax.plot(0, 0, color="yellow", marker ="o", markersize=15)
 for planet in planets:
     planet.marker, = ax.plot([], [], color="blue", marker="o", markersize=5)
 
-def update(frame_num):
-    # Updates Earth's position
-    t = frame_num * 0.05  # Used to determine speed of simulation.
+# Runs the compile 2d orbital engine file as a subprocess.
+orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdout=subprocess.PIPE, text=True)
 
-    # Parametric equation (r*sin(v*t), r*cos(v*t)), with r and v as constants, used to draw circular orbit.
-    for planet in planets:
-        x = planet.orbit_radius * math.sin(planet.angular_velocity * t)
-        y = planet.orbit_radius * math.cos(planet.angular_velocity * t)
-        planet.marker.set_data([x], [y])
+# Note that while frame_num isn't used, removing it causes issues with matplotlib for some reason.
+def update(frame_num):
+    # Reads a line of output from orbital engine.
+    line = orbit_sim.stdout.readline().strip()
+    if not line:
+        return [planet.marker for planet in planets] # Stop if no more data.
     
+    # Updating Earth's position
+    values = line.split()
+    for i in range(len(values)):
+        values[i] = float(values[i])
+    x, y = values
+
+    Earth.marker.set_data([x], [y])
+
     return [planet.marker for planet in planets]
 
 # Create animation
@@ -52,3 +61,7 @@ def update(frame_num):
 ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
 
 plt.show()
+
+# Close the subprocess when done
+orbit_sim.stdout.close()
+orbit_sim.wait()
