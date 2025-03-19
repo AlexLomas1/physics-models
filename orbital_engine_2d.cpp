@@ -13,6 +13,13 @@ class Planet {
         float v_x; // Current velocity in x-direction (ms^-1)
         float v_y; // Current velocity in y-direction (ms^-1)
         float mass; // (kg)
+        void init(float a, float b, float c, float d, float e) {
+            x = a;
+            y = b;
+            v_x = c;
+            v_y = d;
+            mass = e;
+        }
 };
 
 void calc_acceleration(float m, float x, float y, float&a_x, float&a_y) {
@@ -38,68 +45,37 @@ int main() {
     Planet planets[8]; // array to store Planet objects.
 
     // Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html
+    // init arguments: x, y, v_x, v_y, mass
     Planet Mercury;
-    Mercury.y = 0.387 * AU;
-    Mercury.x = 0;
-    Mercury.v_x = 47400;
-    Mercury.v_y = 0;
-    Mercury.mass = 0.330 * pow(10,24);
+    Mercury.init(0, 0.387 * AU, 47400, 0, 0.330 * pow(10,24));
     planets[0] = Mercury;
 
     Planet Venus;
-    Venus.x = 0;
-    Venus.y = 0.723 * AU;
-    Venus.v_x = 35000;
-    Venus.v_y = 0;
-    Venus.mass = 4.87 * pow(10,24);
+    Venus.init(0, 0.723 * AU, 35000, 0, 4.87 * pow(10,24));
     planets[1] = Venus;
     
     Planet Earth;
-    Earth.x = 0;
-    Earth.y = 1 * AU;
-    Earth.v_x = 29800;
-    Earth.v_y = 0;
-    Earth.mass = 5.97 * pow(10,24);
+    Earth.init(0, AU, 29800, 0, 5.97 * pow(10,24));
     planets[2] = Earth;
 
     Planet Mars;
-    Mars.x = 0;
-    Mars.y = 1.52 * AU;
-    Mars.v_x = 24100;
-    Mars.v_y = 0;
-    Mars.mass = 0.642 * pow(10,24);
+    Mars.init(0, 1.52 * AU, 24100, 0, 0.642 * pow(10,24));
     planets[3] = Mars;
 
     Planet Jupiter;
-    Jupiter.x = 0;
-    Jupiter.y = 5.20 * AU;
-    Jupiter.v_x = 13100;
-    Jupiter.v_y = 0;
-    Jupiter.mass = 1898 * pow(10,24);
+    Jupiter.init(0, 5.20 * AU, 13100, 0, 1898 * pow(10,24));
     planets[4] = Jupiter;
 
     Planet Saturn;
-    Saturn.x = 0;
-    Saturn.y = 9.57 * AU;
-    Saturn.v_x = 9700;
-    Saturn.v_y = 0;
-    Saturn.mass = 568 * pow(10,24);
+    Saturn.init(0, 9.57 * AU, 9700, 0, 568 * pow(10,24));
     planets[5] = Saturn;
 
     Planet Uranus;
-    Uranus.x = 0;
-    Uranus.y = 19.17 * AU;
-    Uranus.v_x = 6800;
-    Uranus.v_y = 0;
-    Uranus.mass = 86.8 * pow(10,24);
+    Uranus.init(0, 19.17 * AU, 6800, 0, 86.8 * pow(10,24));
     planets[6] = Uranus;
 
     Planet Neptune;
-    Neptune.x = 0;
-    Neptune.y = 30.18 * AU;
-    Neptune.v_x = 5400;
-    Neptune.v_y = 0;
-    Neptune.mass = 102 * pow(10,24);
+    Neptune.init(0, 30.18 * AU, 5400, 0, 102 * pow(10,24));
     planets[7] = Neptune;
     
     // May need to increase range of t to allow animation to last longer.
