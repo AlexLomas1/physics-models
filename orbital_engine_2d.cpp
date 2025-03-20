@@ -10,15 +10,23 @@ class Planet {
     public:
         float x; //  Current x-coordinate (m)
         float y; // Current y-coordinate (m)
+        float semi_major_axis; // (m)
+        float eccentricity; // Eccentricity of orbit
         float v_x; // Current velocity in x-direction (ms^-1)
         float v_y; // Current velocity in y-direction (ms^-1)
         float mass; // (kg)
-        void init(float a, float b, float c, float d, float e) {
-            x = a;
-            y = b;
-            v_x = c;
-            v_y = d;
-            mass = e;
+        void init(float a, float b, float c) {
+            semi_major_axis = a * AU;
+            eccentricity = b;
+            mass = c;
+
+            /* All planets start at aphelion (max distance from sun), so as to produce an elliptical
+            orbit. Aphelion modelled as being in positive y direction for all planets (for now at least). */
+            x = 0;
+            y = (1+eccentricity)*semi_major_axis; 
+            // Initial velocity, which is also the minimum velocity, calculated using vis-viva equation.
+            v_x = sqrt(G*(SunMass+mass)*((2/y)-(1/semi_major_axis)));
+            v_y = 0;
         }
 };
 
@@ -35,8 +43,8 @@ void calc_acceleration(float m, float x, float y, float&a_x, float&a_y) {
     float F_x = F * x / dist;
     float F_y = F * y / dist;
 
-    // Acceleration calculated using Newton's second law of motion, F = ma. It is negative as planet is
-    // being accelerated towards the sun.
+    /* Acceleration calculated using F = ma. It is negative as planet is being accelerated towards the
+    the sun, positive would be accelerating the planet away. */
     a_x = -F_x / m;
     a_y = -F_y / m;
 }
@@ -45,47 +53,50 @@ int main() {
     Planet planets[8]; // array to store Planet objects.
 
     // Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html
-    // init arguments: x, y, v_x, v_y, mass
+    // init arguments: semi-major axis (in AU), eccentricity, mass
+
     Planet Mercury;
-    Mercury.init(0, 0.387 * AU, 47400, 0, 0.330 * pow(10,24));
+    Mercury.init(0.387, 0.206, 0.330 * pow(10,24));
     planets[0] = Mercury;
 
     Planet Venus;
-    Venus.init(0, 0.723 * AU, 35000, 0, 4.87 * pow(10,24));
+    Venus.init(0.723, 0.007, 4.87 * pow(10,24));
     planets[1] = Venus;
     
     Planet Earth;
-    Earth.init(0, AU, 29800, 0, 5.97 * pow(10,24));
+    Earth.init(1.000, 0.017, 5.97 * pow(10,24));
     planets[2] = Earth;
 
     Planet Mars;
-    Mars.init(0, 1.52 * AU, 24100, 0, 0.642 * pow(10,24));
+    Mars.init(1.523, 0.094, 0.642 * pow(10,24));
     planets[3] = Mars;
 
     Planet Jupiter;
-    Jupiter.init(0, 5.20 * AU, 13100, 0, 1898 * pow(10,24));
+    Jupiter.init(5.204, 0.049, 1898 * pow(10,24));
     planets[4] = Jupiter;
 
     Planet Saturn;
-    Saturn.init(0, 9.57 * AU, 9700, 0, 568 * pow(10,24));
+    Saturn.init(9.583, 0.052, 568 * pow(10,24));
     planets[5] = Saturn;
 
     Planet Uranus;
-    Uranus.init(0, 19.17 * AU, 6800, 0, 86.8 * pow(10,24));
+    Uranus.init(19.191, 0.047, 86.8 * pow(10,24));
     planets[6] = Uranus;
 
     Planet Neptune;
-    Neptune.init(0, 30.18 * AU, 5400, 0, 102 * pow(10,24));
+    Neptune.init(30.07, 0.010, 102 * pow(10,24));
     planets[7] = Neptune;
     
     // May need to increase range of t to allow animation to last longer.
     for (int t=0; t <= 1000; t++) {
         for (int i=0; i < 8; i++) {
             float a_x, a_y;
-            calc_acceleration(planets[i].mass, planets[i].x, planets[i].y, a_x, a_y);
             // a_x and a_y passed by reference.
+            calc_acceleration(planets[i].mass, planets[i].x, planets[i].y, a_x, a_y);
 
-            planets[i].v_x += a_x * 864000; // 10 days in seconds
+            /* Updating planet's velocities and coordinates using Euler method. Time step is 10 days.
+            Smaller time step would increase accuracy, but makes simulation slower. */
+            planets[i].v_x += a_x * 864000; 
             planets[i].v_y += a_y * 864000;
 
             planets[i].x += planets[i].v_x * 864000;
@@ -93,8 +104,8 @@ int main() {
             
             // Converts coordinates to AU and prints them so Python file can read them.
             std::cout << planets[i].x/AU << " " << planets[i].y/AU;
-            // Ensures each coordinate is seperated by a space, but that last coordinate doesn't have
-            // a trailing space.
+            /* Ensures each coordinate is seperated by a space, but that last coordinate doesn't have
+            a trailing space. */
             if (i != 7) {
                 std::cout << " ";
             } 
