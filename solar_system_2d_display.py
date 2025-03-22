@@ -16,7 +16,7 @@ ax.grid()
 ax.plot(0, 0, color="yellow", marker ="o", markersize=15) 
 
 class Planet:
-    def __init__(self, name, colour):
+    def __init__(self, name, colour, semi_major_axis, eccentricity, mass):
         self.name = name
         self.colour = colour
         # Creating marker for the planet
@@ -27,21 +27,28 @@ class Planet:
         self.x_values = []
         self.y_values = []
 
+        # Data values to be sent to physics engine
+        self.semi_major_axis = semi_major_axis * 1.496 * 10**11 # Converting to metres
+        self.eccentricity = eccentricity
+        self.mass = mass * 10**24 
+
 # Note: the colours are just ones I've chosen as I believe they vaguely match images online, and
 # are not based on actual scientific facts.
-Mercury = Planet("Mercury", "grey")
-Venus = Planet("Venus", "khaki")
-Earth = Planet("Earth", "blue")
-Mars = Planet("Mars", "red")
-Jupiter = Planet("Jupiter", "tan")
-Saturn = Planet("Saturn", "wheat")
-Uranus = Planet("Uranus", "lightblue")
-Neptune = Planet("Neptune", "mediumblue")
+# Source for semi-major axis, eccentricity, and mass: https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html
+Mercury = Planet("Mercury", "grey", 0.387, 0.206, 0.330)
+Venus = Planet("Venus", "khaki", 0.723, 0.007, 4.87)
+Earth = Planet("Earth", "blue", 1.0, 0.017, 5.97)
+Mars = Planet("Mars", "red", 1.523, 0.094, 0.642)
+Jupiter = Planet("Jupiter", "tan", 5.204, 0.049, 1898)
+Saturn = Planet("Saturn", "wheat", 9.583, 0.052, 568)
+Uranus = Planet("Uranus", "lightblue", 19.191, 0.047, 86.8)
+Neptune = Planet("Neptune", "mediumblue", 30.07, 0.010, 102)
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
 
-# Runs the compiled 2d orbital engine file as a subprocess.
-orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdout=subprocess.PIPE, text=True)
+# Runs the compiled 2d orbital engine file as a subprocess. stdin 
+orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
+                             stdout=subprocess.PIPE, text=True)
 
 # Note that while frame_num isn't used, removing it causes issues with matplotlib for some reason.
 def update(frame_num):
@@ -64,6 +71,13 @@ def update(frame_num):
         planets[i].marker.set_data([x], [y])
 
     return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
+
+# Writing planetary data to orbital engine
+for planet in planets:
+    data = [str(planet.semi_major_axis), str(planet.eccentricity), str(planet.mass)]
+    line = data[0] + " " + data[1] + " " + data[2] + "\n"
+    orbit_sim.stdin.writelines([line])
+orbit_sim.stdin.close()
 
 # Create animation
 # Note: may need to increase number of frames later to allow animation to last longer.

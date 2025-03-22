@@ -16,7 +16,7 @@ class Planet {
         float v_y; // Current velocity in y-direction (ms^-1)
         float mass; // (kg)
         void init(float a, float b, float c) {
-            semi_major_axis = a * AU;
+            semi_major_axis = a;
             eccentricity = b;
             mass = c;
 
@@ -51,45 +51,18 @@ void calc_acceleration(float m, float x, float y, float&a_x, float&a_y) {
 
 int main() {
     Planet planets[8]; // array to store Planet objects.
+    int planet_count = 0;
+    float semi_major_axis, eccentricity, mass;
 
-    // Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html
-    // init arguments: semi-major axis (in AU), eccentricity, mass
-
-    Planet Mercury;
-    Mercury.init(0.387, 0.206, 0.330 * pow(10,24));
-    planets[0] = Mercury;
-
-    Planet Venus;
-    Venus.init(0.723, 0.007, 4.87 * pow(10,24));
-    planets[1] = Venus;
-    
-    Planet Earth;
-    Earth.init(1.000, 0.017, 5.97 * pow(10,24));
-    planets[2] = Earth;
-
-    Planet Mars;
-    Mars.init(1.523, 0.094, 0.642 * pow(10,24));
-    planets[3] = Mars;
-
-    Planet Jupiter;
-    Jupiter.init(5.204, 0.049, 1898 * pow(10,24));
-    planets[4] = Jupiter;
-
-    Planet Saturn;
-    Saturn.init(9.583, 0.052, 568 * pow(10,24));
-    planets[5] = Saturn;
-
-    Planet Uranus;
-    Uranus.init(19.191, 0.047, 86.8 * pow(10,24));
-    planets[6] = Uranus;
-
-    Planet Neptune;
-    Neptune.init(30.07, 0.010, 102 * pow(10,24));
-    planets[7] = Neptune;
+    // Receives planetary data from Python file
+    while (std::cin >> semi_major_axis >> eccentricity >> mass && planet_count < 8) {
+        planets[planet_count].init(semi_major_axis, eccentricity, mass);
+        planet_count += 1;
+    }
     
     // May need to increase range of t to allow animation to last longer.
     for (int t=0; t <= 1000; t++) {
-        for (int i=0; i < 8; i++) {
+        for (int i=0; i < planet_count; i++) {
             float a_x, a_y;
             // a_x and a_y passed by reference.
             calc_acceleration(planets[i].mass, planets[i].x, planets[i].y, a_x, a_y);
@@ -106,7 +79,7 @@ int main() {
             std::cout << planets[i].x/AU << " " << planets[i].y/AU;
             /* Ensures each coordinate is seperated by a space, but that last coordinate doesn't have
             a trailing space. */
-            if (i != 7) {
+            if (i != planet_count - 1) {
                 std::cout << " ";
             } 
         }
