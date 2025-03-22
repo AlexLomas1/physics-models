@@ -18,6 +18,11 @@ class Planet:
         self.colour = colour
         # Creating marker for the planet
         self.marker, = ax.plot([], [], color=colour, marker="o", markersize=5)
+        # Creating orbital path of planet
+        self.orbit_path, = ax.plot([], [], color=colour, linestyle="--", linewidth=0.5)
+        # Storing coordinates for orbital path
+        self.x_values = []
+        self.y_values = []
 
 # Note: the colours are just ones I've chosen as I believe they vaguely match images online, and
 # are not based on actual scientific facts.
@@ -49,9 +54,12 @@ def update(frame_num):
     # Updating position of each planet
     for i in range(8):
         x, y = values[2*i], values[(2*i)+1]
+        planets[i].x_values.append(x)
+        planets[i].y_values.append(y)
+        planets[i].orbit_path.set_data(planets[i].x_values,planets[i].y_values)
         planets[i].marker.set_data([x], [y])
 
-    return [planet.marker for planet in planets]
+    return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
 
 # Create animation
 # Note: may need to increase number of frames later to allow animation to last longer.

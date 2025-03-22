@@ -94,13 +94,13 @@ int main() {
             // a_x and a_y passed by reference.
             calc_acceleration(planets[i].mass, planets[i].x, planets[i].y, a_x, a_y);
 
-            /* Updating planet's velocities and coordinates using Euler method. Time step is 10 days.
+            /* Updating planet's velocities and coordinates using Euler method. Time step is 1 day.
             Smaller time step would increase accuracy, but makes simulation slower. */
-            planets[i].v_x += a_x * 864000; 
-            planets[i].v_y += a_y * 864000;
+            planets[i].v_x += a_x * 86400; 
+            planets[i].v_y += a_y * 86400;
 
-            planets[i].x += planets[i].v_x * 864000;
-            planets[i].y += planets[i].v_y * 864000;
+            planets[i].x += planets[i].v_x * 86400;
+            planets[i].y += planets[i].v_y * 86400;
             
             // Converts coordinates to AU and prints them so Python file can read them.
             std::cout << planets[i].x/AU << " " << planets[i].y/AU;
