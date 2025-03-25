@@ -5,9 +5,7 @@ import subprocess
 
 # Setup figure
 fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_xlim(-35, 35)
 ax.set_xlabel("x / AU")
-ax.set_ylim(-35, 35)
 ax.set_ylabel("y / AU")
 ax.set_aspect("equal")
 ax.set_facecolor("black")
@@ -19,12 +17,11 @@ ax.plot(0, 0, color="yellow", marker ="o", markersize=25)
 class Planet:
     def __init__(self, name, colour, diameter, semi_major_axis, eccentricity, mass):
         # Scales planet sizes with a quadratic-logarithmic scale (if that is even a thing).
-        planet_size = 0.75 * (math.log(diameter, 75))**2
+        self.planet_size = 0.75 * (math.log(diameter, 75))**2
         
-        # Creating marker for the planet
-        self.marker, = ax.plot([], [], color=colour, marker="o", markersize=planet_size, label=name)
-        # Creating orbital path of planet
-        self.orbit_path, = ax.plot([], [], color=colour, linestyle="--", linewidth=0.5)
+        self.name = name
+        self.colour = colour
+
         # Storing coordinates for orbital path
         self.x_values = []
         self.y_values = []
@@ -33,6 +30,12 @@ class Planet:
         self.semi_major_axis = semi_major_axis * 1.496 * 10**11 # Converting to metres from AU
         self.eccentricity = eccentricity
         self.mass = mass * 10**24 
+
+    def create_markers(self):
+        # Creating planet marker
+        self.marker, = ax.plot([], [], color=self.colour, marker="o", markersize=self.planet_size, label=self.name)
+        # Creating marker for orbital path of planet
+        self.orbit_path, = ax.plot([], [], color=self.colour, linestyle="--", linewidth=0.5)
 
 # Note: the colours are just ones I've chosen as I believe they vaguely match images online, and
 # are not based on actual scientific facts.
@@ -48,9 +51,34 @@ Neptune = Planet("Neptune", "mediumblue", 49528, 30.07, 0.010, 102)
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
 
-# Runs the compiled 2d orbital engine file as a subprocess. stdin 
-orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
+def display_inner_planets():
+    ax.set_xlim(-2, 2)
+    ax.set_ylim(-2, 2)
+
+    # Runs the compiled 2d orbital engine file as a subprocess. 
+    global orbit_sim 
+    orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
                              stdout=subprocess.PIPE, text=True)
+    
+    global planets
+    planets = [Mercury, Venus, Earth, Mars]
+
+    # Writing data to orbital engine
+    for planet in planets:
+        planet.create_markers()
+        data = [str(planet.semi_major_axis), str(planet.eccentricity), str(planet.mass)]
+        line = data[0] + " " + data[1] + " " + data[2] + "\n"
+        orbit_sim.stdin.writelines([line])
+    orbit_sim.stdin.close()
+
+    ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=False)
+
+    plt.legend()
+    plt.show()
+
+    # Close the subprocess when done
+    orbit_sim.stdout.close()
+    orbit_sim.wait()
 
 # Note that while frame_num isn't used, removing it causes issues with matplotlib for some reason.
 def update(frame_num):
@@ -65,7 +93,7 @@ def update(frame_num):
         values[i] = float(values[i])
     
     # Updating position of each planet
-    for i in range(8):
+    for i in range(len(planets)):
         x, y = values[2*i], values[(2*i)+1]
         planets[i].x_values.append(x)
         planets[i].y_values.append(y)
@@ -74,20 +102,4 @@ def update(frame_num):
 
     return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
 
-# Writing planetary data to orbital engine
-for planet in planets:
-    data = [str(planet.semi_major_axis), str(planet.eccentricity), str(planet.mass)]
-    line = data[0] + " " + data[1] + " " + data[2] + "\n"
-    orbit_sim.stdin.writelines([line])
-orbit_sim.stdin.close()
-
-# Create animation
-# Note: may need to increase number of frames later to allow animation to last longer.
-ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
-
-plt.legend()
-plt.show()
-
-# Close the subprocess when done
-orbit_sim.stdout.close()
-orbit_sim.wait()
+display_inner_planets()
