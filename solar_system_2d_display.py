@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import math
 import subprocess
 
 # Setup figure
@@ -13,14 +14,15 @@ ax.set_facecolor("black")
 ax.grid()
 
 # Plotting the sun at position [0, 0]
-ax.plot(0, 0, color="yellow", marker ="o", markersize=15) 
+ax.plot(0, 0, color="yellow", marker ="o", markersize=25) 
 
 class Planet:
-    def __init__(self, name, colour, semi_major_axis, eccentricity, mass):
-        self.name = name
-        self.colour = colour
+    def __init__(self, name, colour, diameter, semi_major_axis, eccentricity, mass):
+        # Scales planet sizes with a quadratic-logarithmic scale (if that is even a thing).
+        planet_size = 0.75 * (math.log(diameter, 75))**2
+        
         # Creating marker for the planet
-        self.marker, = ax.plot([], [], color=colour, marker="o", markersize=5, label=name)
+        self.marker, = ax.plot([], [], color=colour, marker="o", markersize=planet_size, label=name)
         # Creating orbital path of planet
         self.orbit_path, = ax.plot([], [], color=colour, linestyle="--", linewidth=0.5)
         # Storing coordinates for orbital path
@@ -28,21 +30,21 @@ class Planet:
         self.y_values = []
 
         # Data values to be sent to physics engine
-        self.semi_major_axis = semi_major_axis * 1.496 * 10**11 # Converting to metres
+        self.semi_major_axis = semi_major_axis * 1.496 * 10**11 # Converting to metres from AU
         self.eccentricity = eccentricity
         self.mass = mass * 10**24 
 
 # Note: the colours are just ones I've chosen as I believe they vaguely match images online, and
 # are not based on actual scientific facts.
-# Source for semi-major axis, eccentricity, and mass: https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html
-Mercury = Planet("Mercury", "grey", 0.387, 0.206, 0.330)
-Venus = Planet("Venus", "khaki", 0.723, 0.007, 4.87)
-Earth = Planet("Earth", "blue", 1.0, 0.017, 5.97)
-Mars = Planet("Mars", "red", 1.523, 0.094, 0.642)
-Jupiter = Planet("Jupiter", "tan", 5.204, 0.049, 1898)
-Saturn = Planet("Saturn", "wheat", 9.583, 0.052, 568)
-Uranus = Planet("Uranus", "lightblue", 19.191, 0.047, 86.8)
-Neptune = Planet("Neptune", "mediumblue", 30.07, 0.010, 102)
+# Source for numerical planet data: https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html
+Mercury = Planet("Mercury", "grey", 4879, 0.387, 0.206, 0.330)
+Venus = Planet("Venus", "khaki", 12104, 0.723, 0.007, 4.87)
+Earth = Planet("Earth", "blue", 12756, 1.0, 0.017, 5.97)
+Mars = Planet("Mars", "red", 6792, 1.523, 0.094, 0.642)
+Jupiter = Planet("Jupiter", "tan", 142984, 5.204, 0.049, 1898)
+Saturn = Planet("Saturn", "wheat", 120526, 9.583, 0.052, 568)
+Uranus = Planet("Uranus", "lightblue", 51118, 19.191, 0.047, 86.8)
+Neptune = Planet("Neptune", "mediumblue", 49528, 30.07, 0.010, 102)
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
 
