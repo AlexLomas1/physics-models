@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import math
+import time
 import subprocess
 
 # Setup figure
@@ -58,7 +59,7 @@ def display_inner_planets():
     # Runs the compiled 2d orbital engine file as a subprocess. 
     global orbit_sim 
     orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
-                             stdout=subprocess.PIPE, text=True)
+                                stdout=subprocess.PIPE, text=True)
     
     global planets
     planets = [Mercury, Venus, Earth, Mars]
@@ -71,7 +72,35 @@ def display_inner_planets():
         orbit_sim.stdin.writelines([line])
     orbit_sim.stdin.close()
 
-    ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=False)
+    ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
+
+    plt.legend()
+    plt.show()
+
+    # Close the subprocess when done
+    orbit_sim.stdout.close()
+    orbit_sim.wait()
+
+def display_outer_planets():
+    ax.set_xlim(-35, 35)
+    ax.set_ylim(-35, 35)
+
+    global orbit_sim 
+    orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
+                                stdout=subprocess.PIPE, text=True)
+    
+    global planets
+    planets = [Jupiter, Saturn, Uranus, Neptune]
+
+    # Writing data to orbital engine
+    for planet in planets:
+        planet.create_markers()
+        data = [str(planet.semi_major_axis), str(planet.eccentricity), str(planet.mass)]
+        line = data[0] + " " + data[1] + " " + data[2] + "\n"
+        orbit_sim.stdin.writelines([line])
+    orbit_sim.stdin.close()
+
+    ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
 
     plt.legend()
     plt.show()
@@ -103,3 +132,22 @@ def update(frame_num):
     return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
 
 display_inner_planets()
+
+# Delay between running display functions so that orbital engine isn't closed and then immediately 
+# reopened. May not actually be necessary.
+start = time.time()
+while time.time() - start < 1:
+    continue
+
+# Need to re-setup the figure after first animation has ended
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.set_xlabel("x / AU")
+ax.set_ylabel("y / AU")
+ax.set_aspect("equal")
+ax.set_facecolor("black")
+ax.grid()
+
+# Plotting the sun at position [0, 0]
+ax.plot(0, 0, color="yellow", marker ="o", markersize=25) 
+
+display_outer_planets()
