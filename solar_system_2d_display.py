@@ -64,7 +64,11 @@ def display_inner_planets():
     global planets
     planets = [Mercury, Venus, Earth, Mars]
 
-    # Writing data to orbital engine
+    # Sending time step to orbital engine - 1 day in seconds
+    time_step = 86400
+    orbit_sim.stdin.writelines([(str(time_step)+"\n")])
+
+    # Writing planetary data to orbital engine
     for planet in planets:
         planet.create_markers()
         data = [str(planet.semi_major_axis), str(planet.eccentricity), str(planet.mass)]
@@ -92,7 +96,11 @@ def display_outer_planets():
     global planets
     planets = [Jupiter, Saturn, Uranus, Neptune]
 
-    # Writing data to orbital engine
+    # Sending time step to orbital engine - 20 days in seconds
+    time_step = 1728000
+    orbit_sim.stdin.writelines([(str(time_step)+"\n")])
+
+    # Writing planetary data to orbital engine
     for planet in planets:
         planet.create_markers()
         data = [str(planet.semi_major_axis), str(planet.eccentricity), str(planet.mass)]

@@ -52,7 +52,10 @@ void calc_acceleration(float m, float x, float y, float&a_x, float&a_y) {
 int main() {
     Planet planets[8]; // array to store Planet objects.
     int planet_count = 0;
+    int TimeStep;
     float semi_major_axis, eccentricity, mass;
+
+    std::cin >> TimeStep;
 
     // Receives planetary data from Python file
     while (std::cin >> semi_major_axis >> eccentricity >> mass && planet_count < 8) {
@@ -60,8 +63,9 @@ int main() {
         planet_count += 1;
     }
     
-    // May need to increase range of t to allow animation to last longer.
-    for (int t=0; t <= 1000; t++) {
+    // May need to increase range of t to allow animation to last longer. Or could just make
+    // it while (true), as t isn't actually used
+    for (int t=0; t <= 10000; t++) {
         for (int i=0; i < planet_count; i++) {
             float a_x, a_y;
             // a_x and a_y passed by reference.
@@ -69,11 +73,11 @@ int main() {
 
             /* Updating planet's velocities and coordinates using Euler method. Time step is 1 day.
             Smaller time step would increase accuracy, but makes simulation slower. */
-            planets[i].v_x += a_x * 86400; 
-            planets[i].v_y += a_y * 86400;
+            planets[i].v_x += a_x * TimeStep; 
+            planets[i].v_y += a_y * TimeStep;
 
-            planets[i].x += planets[i].v_x * 86400;
-            planets[i].y += planets[i].v_y * 86400;
+            planets[i].x += planets[i].v_x * TimeStep;
+            planets[i].y += planets[i].v_y * TimeStep;
             
             // Converts coordinates to AU and prints them so Python file can read them.
             std::cout << planets[i].x/AU << " " << planets[i].y/AU;
