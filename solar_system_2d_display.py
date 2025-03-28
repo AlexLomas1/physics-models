@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from matplotlib.widgets import Button
 import math
 import time
 import subprocess
@@ -53,15 +54,14 @@ Neptune = Planet("Neptune", "mediumblue", 49528, 30.07, 0.010, 102)
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
 
 def display_inner_planets():
+    global orbit_sim, planets, ani
     ax.set_xlim(-2, 2)
     ax.set_ylim(-2, 2)
 
     # Runs the compiled 2d orbital engine file as a subprocess. 
-    global orbit_sim 
     orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
                                 stdout=subprocess.PIPE, text=True)
     
-    global planets
     planets = [Mercury, Venus, Earth, Mars]
 
     # Sending time step to orbital engine - 1 day in seconds
@@ -78,22 +78,54 @@ def display_inner_planets():
 
     ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
 
+    # Create button to switch to outer planets
+    ax_button = plt.axes([0.4375, 0.885, 0.15, 0.05]) 
+    button = Button(ax_button, "Outer Planets")
+    button.on_clicked(button_event)
+
     plt.legend()
     plt.show()
+
+def button_event(event):
+    global orbit_sim, ani
+    print("Button pressed!")
+
+    ani.event_source.stop()
+    plt.close()
 
     # Close the subprocess when done
     orbit_sim.stdout.close()
     orbit_sim.wait()
 
+    # Delay between running display functions so that orbital engine isn't closed and then immediately 
+    # reopened. May not actually be necessary.
+    start = time.time()
+    while time.time() - start < 1:
+        continue
+
+    # Need to re-setup the figure after first animation has ended
+    global fig, ax
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.set_xlabel("x / AU")
+    ax.set_ylabel("y / AU")
+    ax.set_aspect("equal")
+    ax.set_facecolor("black")
+    ax.grid()
+
+    # Plotting the sun at position [0, 0]
+    ax.plot(0, 0, color="yellow", marker ="o", markersize=25) 
+
+    display_outer_planets()
+
 def display_outer_planets():
+    global orbit_sim, planets, ani
+
     ax.set_xlim(-35, 35)
     ax.set_ylim(-35, 35)
 
-    global orbit_sim 
     orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
                                 stdout=subprocess.PIPE, text=True)
     
-    global planets
     planets = [Jupiter, Saturn, Uranus, Neptune]
 
     # Sending time step to orbital engine - 20 days in seconds
@@ -112,10 +144,6 @@ def display_outer_planets():
 
     plt.legend()
     plt.show()
-
-    # Close the subprocess when done
-    orbit_sim.stdout.close()
-    orbit_sim.wait()
 
 # Note that while frame_num isn't used, removing it causes issues with matplotlib for some reason.
 def update(frame_num):
@@ -141,21 +169,6 @@ def update(frame_num):
 
 display_inner_planets()
 
-# Delay between running display functions so that orbital engine isn't closed and then immediately 
-# reopened. May not actually be necessary.
-start = time.time()
-while time.time() - start < 1:
-    continue
-
-# Need to re-setup the figure after first animation has ended
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_xlabel("x / AU")
-ax.set_ylabel("y / AU")
-ax.set_aspect("equal")
-ax.set_facecolor("black")
-ax.grid()
-
-# Plotting the sun at position [0, 0]
-ax.plot(0, 0, color="yellow", marker ="o", markersize=25) 
-
-display_outer_planets()
+if orbit_sim:
+    orbit_sim.stdout.close()
+    orbit_sim.wait()
