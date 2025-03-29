@@ -24,10 +24,6 @@ class Planet:
         self.name = name
         self.colour = colour
 
-        # Storing coordinates for orbital path
-        self.x_values = []
-        self.y_values = []
-
         # Data values to be sent to physics engine
         self.semi_major_axis = semi_major_axis * 1.496 * 10**11 # Converting to metres from AU
         self.eccentricity = eccentricity
@@ -38,6 +34,9 @@ class Planet:
         self.marker, = ax.plot([], [], color=self.colour, marker="o", markersize=self.planet_size, label=self.name)
         # Creating marker for orbital path of planet
         self.orbit_path, = ax.plot([], [], color=self.colour, linestyle="--", linewidth=0.5)
+        # Storing coordinates for orbital path
+        self.x_values = []
+        self.y_values = []
 
 # Note: the colours are just ones I've chosen as I believe they vaguely match images online, and
 # are not based on actual scientific facts.
@@ -54,7 +53,7 @@ Neptune = Planet("Neptune", "mediumblue", 49528, 30.07, 0.010, 102)
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
 
 def display_inner_planets():
-    global orbit_sim, planets, ani
+    global ax, orbit_sim, planets, ani
     ax.set_xlim(-2, 2)
     ax.set_ylim(-2, 2)
 
@@ -77,18 +76,18 @@ def display_inner_planets():
     orbit_sim.stdin.close()
 
     ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
+    plt.legend()
 
     # Create button to switch to outer planets
-    ax_button = plt.axes([0.4375, 0.885, 0.15, 0.05]) 
-    button = Button(ax_button, "Outer Planets")
-    button.on_clicked(button_event)
+    global button
+    ax_button = plt.axes([0.4, 0.885, 0.225, 0.05]) 
+    button = Button(ax_button, "Switch to Outer Planets")
+    button.on_clicked(switch_display)
 
-    plt.legend()
     plt.show()
 
-def button_event(event):
-    global orbit_sim, ani
-    print("Button pressed!")
+def switch_display(event):
+    global orbit_sim, ani, current_display
 
     ani.event_source.stop()
     plt.close()
@@ -115,10 +114,15 @@ def button_event(event):
     # Plotting the sun at position [0, 0]
     ax.plot(0, 0, color="yellow", marker ="o", markersize=25) 
 
-    display_outer_planets()
+    if current_display == "Inner":
+        current_display = "Outer"
+        display_outer_planets()
+    else:
+        current_display = "Inner"
+        display_inner_planets()
 
 def display_outer_planets():
-    global orbit_sim, planets, ani
+    global ax, fig, orbit_sim, planets, ani
 
     ax.set_xlim(-35, 35)
     ax.set_ylim(-35, 35)
@@ -141,8 +145,14 @@ def display_outer_planets():
     orbit_sim.stdin.close()
 
     ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
-
     plt.legend()
+
+    # Create button to switch to inner planets
+    global button
+    ax_button = plt.axes([0.4, 0.885, 0.225, 0.05]) 
+    button = Button(ax_button, "Switch to Inner Planets")
+    button.on_clicked(switch_display)
+
     plt.show()
 
 # Note that while frame_num isn't used, removing it causes issues with matplotlib for some reason.
@@ -167,6 +177,7 @@ def update(frame_num):
 
     return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
 
+current_display = "Inner"
 display_inner_planets()
 
 if orbit_sim:
