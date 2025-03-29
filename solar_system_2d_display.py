@@ -5,17 +5,6 @@ import math
 import time
 import subprocess
 
-# Setup figure
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_xlabel("x / AU")
-ax.set_ylabel("y / AU")
-ax.set_aspect("equal")
-ax.set_facecolor("black")
-ax.grid()
-
-# Plotting the sun at position [0, 0]
-ax.plot(0, 0, color="yellow", marker ="o", markersize=25) 
-
 class Planet:
     def __init__(self, name, colour, diameter, semi_major_axis, eccentricity, mass):
         # Scales planet sizes with a quadratic-logarithmic scale (if that is even a thing).
@@ -50,90 +39,55 @@ Saturn = Planet("Saturn", "wheat", 120526, 9.583, 0.052, 568)
 Uranus = Planet("Uranus", "lightblue", 51118, 19.191, 0.047, 86.8)
 Neptune = Planet("Neptune", "mediumblue", 49528, 30.07, 0.010, 102)
 
-planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
-
-def display_inner_planets():
-    global ax, orbit_sim, planets, ani
-    ax.set_xlim(-2, 2)
-    ax.set_ylim(-2, 2)
-
-    # Runs the compiled 2d orbital engine file as a subprocess. 
-    orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
-                                stdout=subprocess.PIPE, text=True)
-    
-    planets = [Mercury, Venus, Earth, Mars]
-
-    # Sending time step to orbital engine - 1 day in seconds
-    time_step = 86400
-    orbit_sim.stdin.writelines([(str(time_step)+"\n")])
-
-    # Writing planetary data to orbital engine
-    for planet in planets:
-        planet.create_markers()
-        data = [str(planet.semi_major_axis), str(planet.eccentricity), str(planet.mass)]
-        line = data[0] + " " + data[1] + " " + data[2] + "\n"
-        orbit_sim.stdin.writelines([line])
-    orbit_sim.stdin.close()
-
-    ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
-    plt.legend()
-
-    # Create button to switch to outer planets
-    global button
-    ax_button = plt.axes([0.4, 0.885, 0.225, 0.05]) 
-    button = Button(ax_button, "Switch to Outer Planets")
-    button.on_clicked(switch_display)
-
-    plt.show()
-
 def switch_display(event):
-    global orbit_sim, ani, current_display
+    global orbit_sim, ani, current_display, planets
 
-    ani.event_source.stop()
-    plt.close()
+    if current_display != "Start":
+        # Closing the animation and subprocess from previous display
+        ani.event_source.stop()
+        plt.close()
+        orbit_sim.stdout.close()
+        orbit_sim.wait()
+        time.sleep(0.1) # Prevents immediate reopening of orbital engine after being closed, may be unneeded.
+    else:
+        current_display = "Outer" # So inner is displayed next
 
-    # Close the subprocess when done
-    orbit_sim.stdout.close()
-    orbit_sim.wait()
+    if current_display == "Inner":
+        current_display = "Outer"
+        planets = [Jupiter, Saturn, Uranus, Neptune]
+    else:
+        current_display = "Inner"
+        planets = [Mercury, Venus, Earth, Mars]
+    display_planets(current_display, planets)
 
-    # Delay between running display functions so that orbital engine isn't closed and then immediately 
-    # reopened. May not actually be necessary.
-    start = time.time()
-    while time.time() - start < 1:
-        continue
+def display_planets(current_display, planets):
+    global ax, orbit_sim, ani
 
-    # Need to re-setup the figure after first animation has ended
-    global fig, ax
+    # Setting up figure.
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_xlabel("x / AU")
     ax.set_ylabel("y / AU")
     ax.set_aspect("equal")
     ax.set_facecolor("black")
     ax.grid()
-
-    # Plotting the sun at position [0, 0]
-    ax.plot(0, 0, color="yellow", marker ="o", markersize=25) 
+    ax.plot(0, 0, color="yellow", marker ="o", markersize=25) # Plotting the sun at the centre.
 
     if current_display == "Inner":
-        current_display = "Outer"
-        display_outer_planets()
+        ax.set_xlim(-2, 2)
+        ax.set_ylim(-2, 2)
+        time_step = 86400 # 1 day in seconds
+        button_label = "Switch to Outer Planets"
     else:
-        current_display = "Inner"
-        display_inner_planets()
-
-def display_outer_planets():
-    global ax, fig, orbit_sim, planets, ani
-
-    ax.set_xlim(-35, 35)
-    ax.set_ylim(-35, 35)
-
+        ax.set_xlim(-35, 35)
+        ax.set_ylim(-35, 35)
+        time_step = 1728000 # 20 days in seconds
+        button_label = "Switch to Inner Planets"
+    
+    # Runs the compiled 2d orbital engine file as a subprocess
     orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
                                 stdout=subprocess.PIPE, text=True)
     
-    planets = [Jupiter, Saturn, Uranus, Neptune]
-
-    # Sending time step to orbital engine - 20 days in seconds
-    time_step = 1728000
+    # Sending time step to orbital engine
     orbit_sim.stdin.writelines([(str(time_step)+"\n")])
 
     # Writing planetary data to orbital engine
@@ -147,10 +101,10 @@ def display_outer_planets():
     ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
     plt.legend()
 
-    # Create button to switch to inner planets
+    # Create button to switch to other display
     global button
     ax_button = plt.axes([0.4, 0.885, 0.225, 0.05]) 
-    button = Button(ax_button, "Switch to Inner Planets")
+    button = Button(ax_button, button_label)
     button.on_clicked(switch_display)
 
     plt.show()
@@ -163,9 +117,7 @@ def update(frame_num):
         # Stop if no more data.
         return [value for planet in planets for value in [planet.marker, planet.orbit_path]] 
     
-    values = line.split()
-    for i in range(len(values)):
-        values[i] = float(values[i])
+    values = list(map(float, line.split()))
     
     # Updating position of each planet
     for i in range(len(planets)):
@@ -177,8 +129,8 @@ def update(frame_num):
 
     return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
 
-current_display = "Inner"
-display_inner_planets()
+current_display = "Start"
+switch_display(None)
 
 if orbit_sim:
     orbit_sim.stdout.close()
