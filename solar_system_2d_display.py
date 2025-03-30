@@ -18,7 +18,7 @@ class Planet:
         self.eccentricity = eccentricity
         self.mass = mass * 10**24 
 
-    def create_markers(self):
+    def create_markers(self, ax):
         # Creating planet marker
         self.marker, = ax.plot([], [], color=self.colour, marker="o", markersize=self.planet_size, label=self.name)
         # Creating marker for orbital path of planet
@@ -43,10 +43,11 @@ def switch_display(event):
     global orbit_sim, ani, current_display, planets
 
     if current_display != "Start":
-        # Closing the animation and subprocess from previous display
+        # Closing the animation and subprocess from previous display, and clearing the axes
         ani.event_source.stop()
-        plt.close()
+        ax.clear()
         orbit_sim.stdout.close()
+        orbit_sim.terminate()
         orbit_sim.wait()
         time.sleep(0.1) # Prevents immediate reopening of orbital engine after being closed, may be unneeded.
     else:
@@ -61,10 +62,9 @@ def switch_display(event):
     display_planets(current_display, planets)
 
 def display_planets(current_display, planets):
-    global ax, orbit_sim, ani
+    global fig, ax, orbit_sim, ani
 
     # Setting up figure.
-    fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_xlabel("x / AU")
     ax.set_ylabel("y / AU")
     ax.set_aspect("equal")
@@ -72,6 +72,7 @@ def display_planets(current_display, planets):
     ax.grid()
     ax.plot(0, 0, color="yellow", marker ="o", markersize=25) # Plotting the sun at the centre.
 
+    # For time steps: smaller steps would increase accuracy, but makes simulation slower as well
     if current_display == "Inner":
         ax.set_xlim(-2, 2)
         ax.set_ylim(-2, 2)
@@ -92,22 +93,20 @@ def display_planets(current_display, planets):
 
     # Writing planetary data to orbital engine
     for planet in planets:
-        planet.create_markers()
+        planet.create_markers(ax)
         data = [str(planet.semi_major_axis), str(planet.eccentricity), str(planet.mass)]
         line = data[0] + " " + data[1] + " " + data[2] + "\n"
         orbit_sim.stdin.writelines([line])
     orbit_sim.stdin.close()
 
     ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
-    plt.legend()
+    plt.legend(title="Planets", handles=[planet.marker for planet in planets], bbox_to_anchor=(1.8, 0.05))
 
     # Create button to switch to other display
     global button
-    ax_button = plt.axes([0.4, 0.885, 0.225, 0.05]) 
-    button = Button(ax_button, button_label)
-    button.on_clicked(switch_display)
+    button.label.set_text(button_label)
 
-    plt.show()
+    plt.draw()
 
 # Note that while frame_num isn't used, removing it causes issues with matplotlib for some reason.
 def update(frame_num):
@@ -129,9 +128,20 @@ def update(frame_num):
 
     return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
 
+# Initialising figure and axes
+fig, ax = plt.subplots(figsize=(8, 8))
+
+# Creating button to allow for switching between displays
+ax_button = plt.axes([0.4, 0.885, 0.225, 0.05]) 
+button = Button(ax_button, "Switch to Outer Planets")
+button.on_clicked(switch_display)
+
 current_display = "Start"
 switch_display(None)
+plt.show()
 
+# Ensures subprocess is closed before ending
 if orbit_sim:
     orbit_sim.stdout.close()
+    orbit_sim.terminate()
     orbit_sim.wait()
