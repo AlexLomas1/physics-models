@@ -7,13 +7,9 @@ const double SunMass = 1.989e30; // Mass of sun in kg
 
 class Planet {
     public:
-        double x; //  Current x-coordinate (m)
-        double y; // Current y-coordinate (m)
-        double semi_major_axis; // (m)
-        double eccentricity; // Eccentricity of orbit
-        double v_x; // Current velocity in x-direction (ms^-1)
-        double v_y; // Current velocity in y-direction (ms^-1)
-        double mass; // (kg)
+        double x, y, v_x, v_y, a_x, a_y;
+        double semi_major_axis, eccentricity, mass;
+
         void init(double a, double b, double c) {
             semi_major_axis = a;
             eccentricity = b;
@@ -59,25 +55,26 @@ int main() {
     // Receives planetary data from Python file
     while (std::cin >> semi_major_axis >> eccentricity >> mass && planet_count < 8) {
         planets[planet_count].init(semi_major_axis, eccentricity, mass);
+        calc_acceleration(planets[planet_count].mass, planets[planet_count].x, planets[planet_count].y, 
+            planets[planet_count].a_x, planets[planet_count].a_y); // Calculating initial acceleration
         planet_count += 1;
     }
     
-    // May need to increase range of t to allow animation to last longer. Or could just make
-    // it while (true), as t isn't actually used
-    for (int t=0; t <= 10000; t++) {
+    while (true) {
         for (int i=0; i < planet_count; i++) {
-            double a_x, a_y, new_a_x, new_a_y;
+            double new_a_x, new_a_y;
             // Calculating planet's velocities and coordinates using velocity verlet integration.
-            // a_x and a_y passed by reference.
-            calc_acceleration(planets[i].mass, planets[i].x, planets[i].y, a_x, a_y);
+            planets[i].x += planets[i].v_x * TimeStep + 0.5 * planets[i].a_x * TimeStep * TimeStep;
+            planets[i].y += planets[i].v_y * TimeStep + 0.5 * planets[i].a_y * TimeStep * TimeStep;
 
-            planets[i].x += planets[i].v_x * TimeStep + 0.5 * a_x * TimeStep * TimeStep;
-            planets[i].y += planets[i].v_y * TimeStep + 0.5 * a_y * TimeStep * TimeStep;
-
+            // Accelertion values passed by reference.
             calc_acceleration(planets[i].mass, planets[i].x, planets[i].y, new_a_x, new_a_y);
 
-            planets[i].v_x += 0.5 * (a_x + new_a_x) * TimeStep;
-            planets[i].v_y += 0.5 * (a_y + new_a_y) * TimeStep;
+            planets[i].v_x += 0.5 * (planets[i].a_x + new_a_x) * TimeStep;
+            planets[i].v_y += 0.5 * (planets[i].a_y + new_a_y) * TimeStep;
+
+            planets[i].a_x = new_a_x;
+            planets[i].a_y = new_a_y;
             
             // Converts coordinates to AU and prints them so Python file can read them.
             std::cout << planets[i].x/AU << " " << planets[i].y/AU;
