@@ -6,7 +6,7 @@ import time
 import subprocess
 
 class Planet:
-    def __init__(self, name, colour, diameter, semi_major_axis, eccentricity, mass):
+    def __init__(self, name, colour, diameter, initial_coords, initial_v, mass):
         # Scales planet sizes with a quadratic-logarithmic scale (if that is even a thing).
         self.planet_size = 0.75 * (math.log(diameter, 75))**2
         
@@ -14,9 +14,11 @@ class Planet:
         self.colour = colour
 
         # Data values to be sent to physics engine
-        self.semi_major_axis = semi_major_axis * 1.496 * 10**11 # Converting to metres from AU
-        self.eccentricity = eccentricity
-        self.mass = mass * 10**24 
+        self.initial_x = initial_coords[0]
+        self.initial_y = initial_coords[1]
+        self.initial_v_x = initial_v[0]
+        self.initial_v_y = initial_v[1]
+        self.mass = mass * 10**24
 
     def create_markers(self, ax):
         # Creating planet marker
@@ -27,17 +29,24 @@ class Planet:
         self.x_values = []
         self.y_values = []
 
-# Note: the colours are just ones I've chosen as I believe they vaguely match images online, and
-# are not based on actual scientific facts.
-# Source for numerical planet data: https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html
-Mercury = Planet("Mercury", "grey", 4879, 0.387, 0.206, 0.330)
-Venus = Planet("Venus", "khaki", 12104, 0.723, 0.007, 4.87)
-Earth = Planet("Earth", "blue", 12756, 1.0, 0.017, 5.97)
-Mars = Planet("Mars", "red", 6792, 1.523, 0.094, 0.642)
-Jupiter = Planet("Jupiter", "tan", 142984, 5.204, 0.049, 1898)
-Saturn = Planet("Saturn", "wheat", 120526, 9.583, 0.052, 568)
-Uranus = Planet("Uranus", "lightblue", 51118, 19.191, 0.047, 86.8)
-Neptune = Planet("Neptune", "mediumblue", 49528, 30.07, 0.010, 102)
+# Source for planets' diameter and mass: https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html
+# Planets' initial coordinates & velocities (2000-01-01 data to 4sf): https://ssd.jpl.nasa.gov/horizons/app.html
+Mercury = Planet("Mercury", "grey", 4879, [-2.212*(10**10), -6.682*(10**10)], 
+            [3.666*(10**4), -1.230*(10**4)], 0.330)
+Venus = Planet("Venus", "khaki", 12104, [-1.086*(10**11), -3.784*(10**9)], 
+            [8.985*(10**2), -3.517*(10**4)], 4.87)
+Earth = Planet("Earth", "blue", 12756, [-2.628*(10**10), 1.445*(10**11)], 
+            [-2.983*(10**4), -5.220*(10**3)], 5.97)
+Mars = Planet("Mars", "red", 6792, [2.069*(10**11), -3.561*(10**9)],
+            [1.304*(10**3), 2.628*(10**4)], 0.642)
+Jupiter = Planet("Jupiter", "tan", 142984, [5.979*(10**11), 4.387*(10**11)],
+            [-7.893*(10**3), 1.12*(10**4)], 1898)
+Saturn = Planet("Saturn", "wheat", 120526, [9.576*(10**11), 9.821*(10**11)],
+            [-7.420*(10**3), 6.726*(10**3)], 568)
+Uranus = Planet("Uranus", "lightblue", 51118, [2.158*(10**12), -2.055*(10**12)],
+            [4.647*(10**3), 4.614*(10**3)], 86.8)
+Neptune = Planet("Neptune", "mediumblue", 49528, [2.514*(10**12), -3.739*(10**12)],
+            [4.475*(10**3), 3.063*(10**3)], 102)
 
 def switch_display(event):
     global orbit_sim, ani, current_display, planets
@@ -94,8 +103,9 @@ def display_planets(current_display, planets):
     # Writing planetary data to orbital engine
     for planet in planets:
         planet.create_markers(ax)
-        data = [str(planet.semi_major_axis), str(planet.eccentricity), str(planet.mass)]
-        line = data[0] + " " + data[1] + " " + data[2] + "\n"
+        data = [str(planet.initial_x), str(planet.initial_y), str(planet.initial_v_x), 
+                str(planet.initial_v_y), str(planet.mass)]
+        line = data[0] + " " + data[1] + " " + data[2] + " " + data[3] + " " + data[4] + "\n"
         orbit_sim.stdin.writelines([line])
     orbit_sim.stdin.close()
 

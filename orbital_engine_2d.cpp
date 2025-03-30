@@ -7,21 +7,14 @@ const double SunMass = 1.989e30; // Mass of sun in kg
 
 class Planet {
     public:
-        double x, y, v_x, v_y, a_x, a_y;
-        double semi_major_axis, eccentricity, mass;
+        double x, y, v_x, v_y, a_x, a_y, mass;
 
-        void init(double a, double b, double c) {
-            semi_major_axis = a;
-            eccentricity = b;
-            mass = c;
-
-            /* All planets start at aphelion (max distance from sun), so as to produce an elliptical
-            orbit. Aphelion modelled as being in positive y direction for all planets (for now at least). */
-            x = 0;
-            y = (1+eccentricity)*semi_major_axis; 
-            // Initial velocity, which is also the minimum velocity, calculated using vis-viva equation.
-            v_x = sqrt(G*(SunMass+mass)*((2/y)-(1/semi_major_axis)));
-            v_y = 0;
+        void init(double a, double b, double c, double d, double e) {
+            x = a;
+            y = b;
+            v_x = c;
+            v_y = d;
+            mass = e;
         }
 };
 
@@ -48,13 +41,13 @@ int main() {
     Planet planets[8]; // array to store Planet objects.
     int planet_count = 0;
     int TimeStep;
-    double semi_major_axis, eccentricity, mass;
+    double x, y, v_x, v_y, mass;
 
     std::cin >> TimeStep;
 
     // Receives planetary data from Python file
-    while (std::cin >> semi_major_axis >> eccentricity >> mass && planet_count < 8) {
-        planets[planet_count].init(semi_major_axis, eccentricity, mass);
+    while (std::cin >> x >> y >> v_x >> v_y >> mass && planet_count < 8) {
+        planets[planet_count].init(x, y, v_x, v_y, mass);
         calc_acceleration(planets[planet_count].mass, planets[planet_count].x, planets[planet_count].y, 
             planets[planet_count].a_x, planets[planet_count].a_y); // Calculating initial acceleration
         planet_count += 1;
