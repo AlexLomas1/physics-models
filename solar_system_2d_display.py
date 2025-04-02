@@ -7,13 +7,13 @@ import subprocess
 
 class Planet:
     def __init__(self, name, colour, diameter, initial_coords, initial_v, mass):
-        # Scales planet sizes with a quadratic-logarithmic scale (if that is even a thing).
+        # Scales planet sizes with a quadratic-logarithmic function.
         self.planet_size = 0.75 * (math.log(diameter, 75))**2
         
         self.name = name
         self.colour = colour
 
-        # Data values to be sent to physics engine
+        # Data values to be sent to orbital engine
         self.initial_x = initial_coords[0]
         self.initial_y = initial_coords[1]
         self.initial_v_x = initial_v[0]
@@ -23,9 +23,9 @@ class Planet:
     def create_markers(self, ax):
         # Creating planet marker
         self.marker, = ax.plot([], [], color=self.colour, marker="o", markersize=self.planet_size, label=self.name)
-        # Creating marker for orbital path of planet
+        # Creating dashed line to display orbital path.
         self.orbit_path, = ax.plot([], [], color=self.colour, linestyle="--", linewidth=0.5)
-        # Storing coordinates for orbital path
+        # Storing coordinates for orbital path.
         self.x_values = []
         self.y_values = []
 
@@ -52,13 +52,13 @@ def switch_display(event):
     global orbit_sim, ani, current_display, planets
 
     if current_display != "Start":
-        # Closing the animation and subprocess from previous display, and clearing the axes
+        # Closing current animation and subprocess so new animation can be started.
         ani.event_source.stop()
         ax.clear()
         orbit_sim.stdout.close()
         orbit_sim.terminate()
         orbit_sim.wait()
-        time.sleep(0.1) # Prevents immediate reopening of orbital engine after being closed, may be unneeded.
+        time.sleep(0.1) # Prevents immediate reopening of orbital engine.
     else:
         current_display = "Outer" # So inner is displayed next
 
@@ -81,26 +81,27 @@ def display_planets(current_display, planets):
     ax.grid()
     ax.plot(0, 0, color="yellow", marker ="o", markersize=25) # Plotting the sun at the centre.
 
-    # For time steps: smaller steps would increase accuracy, but makes simulation slower as well
+    # For time steps: this is time step used in calculations by orbital engine, the animation is updated
+    # once for every 10 time steps, in order to improve accuracy without making simulation slow.
     if current_display == "Inner":
         ax.set_xlim(-2, 2)
         ax.set_ylim(-2, 2)
-        time_step = 86400 # 1 day in seconds
+        time_step = 7200 # 2 hours in seconds
         button_label = "Switch to Outer Planets"
     else:
         ax.set_xlim(-35, 35)
         ax.set_ylim(-35, 35)
-        time_step = 1728000 # 20 days in seconds
+        time_step = 172800 # 2 days in seconds
         button_label = "Switch to Inner Planets"
     
-    # Runs the compiled 2d orbital engine file as a subprocess
+    # Runs the compiled 2D orbital engine file as a subprocess.
     orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
                                 stdout=subprocess.PIPE, text=True)
     
-    # Sending time step to orbital engine
+    # Sending time step to orbital engine.
     orbit_sim.stdin.writelines([(str(time_step)+"\n")])
 
-    # Writing planetary data to orbital engine
+    # Sending planet masses and initial coordinates and velocities to orbital engine.
     for planet in planets:
         planet.create_markers(ax)
         data = [str(planet.initial_x), str(planet.initial_y), str(planet.initial_v_x), 
@@ -112,13 +113,13 @@ def display_planets(current_display, planets):
     ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
     plt.legend(title="Planets", handles=[planet.marker for planet in planets], bbox_to_anchor=(1.8, 0.05))
 
-    # Create button to switch to other display
+    # Changing button label.
     global button
     button.label.set_text(button_label)
 
     plt.draw()
 
-# Note that while frame_num isn't used, removing it causes issues with matplotlib for some reason.
+# frame_num is required for Matplotlib animation, even if it isn't used.
 def update(frame_num):
     # Reads a line of output from orbital engine.
     line = orbit_sim.stdout.readline().strip()
@@ -128,7 +129,7 @@ def update(frame_num):
     
     values = list(map(float, line.split()))
     
-    # Updating position of each planet
+    # Updating position of each planet.
     for i in range(len(planets)):
         x, y = values[2*i], values[(2*i)+1]
         planets[i].x_values.append(x)
@@ -138,10 +139,10 @@ def update(frame_num):
 
     return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
 
-# Initialising figure and axes
+# Initialising figure and axes.
 fig, ax = plt.subplots(figsize=(8, 8))
 
-# Creating button to allow for switching between displays
+# Creating button to allow for switching between displays.
 ax_button = plt.axes([0.4, 0.885, 0.225, 0.05]) 
 button = Button(ax_button, "Switch to Outer Planets")
 button.on_clicked(switch_display)
@@ -150,7 +151,7 @@ current_display = "Start"
 switch_display(None)
 plt.show()
 
-# Ensures subprocess is closed before ending
+# Ensures subprocess is closed before ending.
 if orbit_sim:
     orbit_sim.stdout.close()
     orbit_sim.terminate()

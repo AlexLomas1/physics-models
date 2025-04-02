@@ -21,7 +21,7 @@ class Planet {
 void calc_acceleration(double m, double x, double y, double&a_x, double&a_y) {
     /* Force calculted using Newton's law of universal gravitation, with formula F = G * m1 * m2 / (r^2)
     where m1 and m2 are the masses of the two bodies and r is the distance between them. As the sun
-    is fixed at [0, 0], the distance is just sqrt(x^2+y^2). */
+    is fixed at [0, 0], the distance is just sqrt(x^2 + y^2). */
     double dist_squared = (x * x) + (y * y);
     double dist = sqrt(dist_squared);
 
@@ -55,20 +55,23 @@ int main() {
     
     while (true) {
         for (int i=0; i < planet_count; i++) {
-            double new_a_x, new_a_y;
-            // Calculating planet's velocities and coordinates using velocity verlet integration.
-            planets[i].x += planets[i].v_x * TimeStep + 0.5 * planets[i].a_x * TimeStep * TimeStep;
-            planets[i].y += planets[i].v_y * TimeStep + 0.5 * planets[i].a_y * TimeStep * TimeStep;
+            // Position updated ten times before new position is output in order to increase accuracy.
+            for (int j=0; j < 10; j++) {
+                double new_a_x, new_a_y;
+                // Updating planet's position and velocity using Velocity Verlet integration.
+                planets[i].x += planets[i].v_x * TimeStep + 0.5 * planets[i].a_x * TimeStep * TimeStep;
+                planets[i].y += planets[i].v_y * TimeStep + 0.5 * planets[i].a_y * TimeStep * TimeStep;
 
-            // Accelertion values passed by reference.
-            calc_acceleration(planets[i].mass, planets[i].x, planets[i].y, new_a_x, new_a_y);
+                // Accelertion values passed by reference.
+                calc_acceleration(planets[i].mass, planets[i].x, planets[i].y, new_a_x, new_a_y);
 
-            planets[i].v_x += 0.5 * (planets[i].a_x + new_a_x) * TimeStep;
-            planets[i].v_y += 0.5 * (planets[i].a_y + new_a_y) * TimeStep;
+                planets[i].v_x += 0.5 * (planets[i].a_x + new_a_x) * TimeStep;
+                planets[i].v_y += 0.5 * (planets[i].a_y + new_a_y) * TimeStep;
 
-            planets[i].a_x = new_a_x;
-            planets[i].a_y = new_a_y;
-            
+                planets[i].a_x = new_a_x;
+                planets[i].a_y = new_a_y;
+
+            }
             // Converts coordinates to AU and prints them so Python file can read them.
             std::cout << planets[i].x/AU << " " << planets[i].y/AU;
             /* Ensures each coordinate is seperated by a space, but that last coordinate doesn't have
