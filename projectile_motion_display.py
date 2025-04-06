@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-import time
+import math
 import subprocess
 
 class Projectile:
@@ -16,7 +16,7 @@ class Projectile:
 
     def create_marker(self, ax):
         # Creating line to display projectile's path.
-        self.marker, = ax.plot([], [], color=self.colour, linestyle="-", linewidth=1)
+        self.marker, = ax.plot([], [], label=self.label, color=self.colour, linestyle="-", linewidth=1)
         # Storing coordinates for projectile's path.
         self.x_values = [self.initial_coordinates[0]]
         self.y_values = [self.initial_coordinates[1]]
@@ -42,7 +42,6 @@ def update(frame_num):
         return [projectile.marker for projectile in projectiles]
     
     values = list(map(float, line.split()))
-    print(line)
 
     for i in range(len(projectiles)):
         x, y = values[2*i], values[(2*i)+1]
@@ -54,13 +53,26 @@ def update(frame_num):
 
     return [projectile.marker for projectile in projectiles]
 
+def set_axes_limits(velocity, angle, h, ax):
+    # Calculating max height of non-drag projectile.
+    max_h = ((velocity * math.sin(angle))**2 / (2*9.81)) + h
+    y_lim = ((max_h // 10) + 1) * 10
+
+    # Calculting final horizontal distance travelled of non-drag projectile.
+    temp = velocity * math.sin(angle)
+    time = (temp + math.sqrt(temp**2 + 19.62*h)) / 9.81
+    max_dist = velocity * math.cos(angle) * time
+    x_lim = ((max_dist // 10) + 1) * 10
+
+    ax.set_xlim(0, x_lim)
+    ax.set_ylim(0, y_lim)
+
 # Setting up the figure
 fig, ax = plt.subplots(figsize=(8, 8))
 ax.set_xlabel("x / m")
-ax.set_xlim(0, 40)
 ax.set_ylabel("y / m")
-ax.set_ylim(0, 40)
 ax.set_aspect("equal")
+set_axes_limits(float(velocity), math.radians(float(angle)), float(h), ax)
 ax.grid()
 
 # Opens the compiled dynamics engine as a subprocess.
@@ -81,6 +93,7 @@ for projectile in projectiles:
 projectile_sim.stdin.close()
 
 ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
+plt.legend(handles=[projectile.marker for projectile in projectiles], loc="upper right")
 plt.show()
 
 projectile_sim.stdout.close()
