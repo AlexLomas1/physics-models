@@ -6,7 +6,7 @@ const float air_density = 1.225; // Density of air at sea level (kgm^-3)
 
 class Projectile {
     public:
-        double mass, area, drag_coeff, x, y, v_x, v_y, a_x, a_y;
+        double mass, area, drag_coeff, x, y, prev_x, prev_y, v_x, v_y, a_x, a_y;
     
         void init(double h, double u, double angle, double m, double A, double C) {
             y = h;
@@ -46,6 +46,11 @@ void calc_acceleration(double mass, double area, double v_x, double v_y, double 
     a_y = a_y - g;
 }
 
+float linear_interpolation(float prev_x, float prev_y, float x, float y) {
+    // Uses linear interpolation to estimate x value when y = 0.
+    return ((prev_x * y) - (x * prev_y)) / (y - prev_y);
+}
+
 int main() {
     Projectile projectiles[5];
     int projectile_count = 0;
@@ -70,6 +75,10 @@ int main() {
                 std::cout << projectiles[i].x << " " << 0;
             }
             else {
+                // Storing previous values
+                projectiles[i].prev_x = projectiles[i].x;
+                projectiles[i].prev_y = projectiles[i].y;
+
                 // Calculating new acceleration using velocity verlet integration.
                 double new_a_x, new_a_y;
                 projectiles[i].x += projectiles[i].v_x * TimeStep + 0.5 * projectiles[i].a_x * TimeStep * TimeStep;
@@ -85,6 +94,10 @@ int main() {
                 projectiles[i].a_y = new_a_y;
 
                 if (projectiles[i].y <= 0) {
+                    // Using linear interpolation to estimate x value when y = 0 (projectile hits ground)
+                    projectiles[i].x = linear_interpolation(projectiles[i].prev_x, projectiles[i].prev_y, 
+                        projectiles[i].x, projectiles[i].y);
+                    
                     std::cout << projectiles[i].x << " " << 0;
                     projectiles_ended ++;
                 }
