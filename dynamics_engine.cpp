@@ -10,6 +10,7 @@ class Projectile {
     
         void init(double h, double u, double angle, double m, double A, double C) {
             y = h;
+            prev_y = -1; // Used to indicate projectile is in initial position.
             x = 0;
             angle = angle * 2 * M_PI / 360; // Converting angle to radians.
             v_x = u * cos(angle);
@@ -22,8 +23,6 @@ class Projectile {
 
 void calc_acceleration(double mass, double area, double v_x, double v_y, double drag_coeff, double& a_x, double& a_y) {
     // Calculating drag forces in x and y-directions using formula F = 0.5 * ρ * v^2 * C * A
-    // PROBLEM: How do I make sure it is always acting in direction opposite to v, as v is 
-    // squared in equation?
     double F_x = 0.5 * air_density * v_x * v_x * drag_coeff * area;
     double F_y = 0.5 * air_density * v_y * v_y * drag_coeff * area;
     
@@ -70,8 +69,10 @@ int main() {
     int projectiles_ended = 0;
     while (projectiles_ended < projectile_count) {
         for (int i=0; i < projectile_count; i++) {
-            // If projectile's motion has already ended (but the others' haven't), output last coordinates
-            if (projectiles[i].y <= 0) {
+            /* If projectile's motion has already ended (but the others' haven't), output last coordinates.
+            prev_y == -1 indicates that this is the projectile's initial position, so doesn't stop if 
+            projectile starts at [0, 0]. */
+            if (projectiles[i].y <= 0 && projectiles[i].prev_y != -1) {
                 std::cout << projectiles[i].x << " " << 0;
             }
             else {
