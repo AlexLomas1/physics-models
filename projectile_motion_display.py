@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from matplotlib.widgets import TextBox
 import math
 import subprocess
 
@@ -22,11 +23,11 @@ class Projectile:
         self.y_values = [self.initial_coordinates[1]]
 
 # Input data from user
-h = input("Height: ")
-velocity = input("Velocity: ")
+h = input("Height (m): ")
+velocity = input("Velocity (ms^-1): ")
 angle = input("Angle: ")
-mass = input("Mass: ")
-area = input("Area: ")
+mass = input("Mass (kg): ")
+area = input("Area (m^2): ")
 drag_coeff = input("Drag coefficient: ")
 
 Drag = Projectile("Drag", "blue", h, velocity, angle, mass, area, drag_coeff)
@@ -58,7 +59,7 @@ def set_axes_limits(velocity, angle, h, ax):
     max_h = ((velocity * math.sin(angle))**2 / (2*9.81)) + h
     y_lim = ((max_h // 10) + 1) * 10
 
-    # Calculting final horizontal distance travelled of non-drag projectile.
+    # Calculting final horizontal distance travelled by non-drag projectile.
     temp = velocity * math.sin(angle)
     time = (temp + math.sqrt(temp**2 + 19.62*h)) / 9.81
     max_dist = velocity * math.cos(angle) * time
@@ -93,6 +94,49 @@ for projectile in projectiles:
 projectile_sim.stdin.close()
 
 ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
+
+def change_height(new_height):
+    print("New height:", new_height)
+
+def change_velocity(new_v):
+    print("New velocity:", new_v)
+
+def change_angle(new_angle):
+    print("New angle:", new_angle)
+
+def change_mass(new_mass):
+    print("New mass:", new_mass)
+
+def change_area(new_area):
+    print("New area:", new_area)
+
+def change_drag_coeff(new_drag_coeff):
+    print("New drag coefficient:", new_drag_coeff)
+
+ax_height_input = fig.add_axes([0.9, 0.8, 0.05, 0.05])
+height_input = TextBox(ax_height_input, "Height: ", textalignment="center")
+height_input.on_submit(change_height)
+
+ax_velocity_input = fig.add_axes([0.9, 0.7, 0.05, 0.05])
+velocity_input = TextBox(ax_velocity_input, "Velocity: ", textalignment="center")
+velocity_input.on_submit(change_velocity)
+
+ax_angle_input = fig.add_axes([0.9, 0.6, 0.05, 0.05])
+angle_input = TextBox(ax_angle_input, "Angle: ", textalignment="center")
+angle_input.on_submit(change_angle)
+
+ax_mass_input = fig.add_axes([0.9, 0.5, 0.05, 0.05])
+mass_input = TextBox(ax_mass_input, "Mass: ", textalignment="center")
+mass_input.on_submit(change_mass)
+
+ax_area_input = fig.add_axes([0.9, 0.4, 0.05, 0.05])
+area_input = TextBox(ax_area_input, "Area: ", textalignment="center")
+area_input.on_submit(change_area)
+
+ax_drag_coeff_input = fig.add_axes([0.9, 0.3, 0.05, 0.05])
+drag_coeff_input = TextBox(ax_drag_coeff_input, "Drag coefficient: ", textalignment="center")
+drag_coeff_input.on_submit(change_drag_coeff)
+
 plt.legend(handles=[projectile.marker for projectile in projectiles], loc="upper right")
 plt.show()
 
