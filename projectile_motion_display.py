@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import matplotlib.gridspec as gridspec
 from matplotlib.widgets import TextBox
 import math
 import time
@@ -79,7 +80,7 @@ def display_projectiles(projectiles, fig, ax):
 
     global ani
     ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
-    plt.legend(handles=[projectile.marker for projectile in projectiles], loc="upper right")
+    plt.legend(handles=[projectile.marker for projectile in projectiles], loc="center right", bbox_to_anchor=(1.15, 12.7))
 
     plt.draw()
 
@@ -123,16 +124,21 @@ def change_val(new_val, index):
     update_projectile_data(current_data, start=False)
 
 # Setting up the figure
-fig, ax = plt.subplots(figsize=(8, 8))
+fig = plt.figure(figsize=(8, 8))
+gs = gridspec.GridSpec(1, 2, width_ratios=[9, 1])
+ax = fig.add_subplot(gs[0])
+# Creating second axis to keep the text boxes seperated from main axis
+ax_input_boxes = fig.add_subplot(gs[1])
+ax_input_boxes.axis("off")
 
 text_boxes = []
 text_boxes_data = [
-    [[0.9, 0.8, 0.05, 0.05], "Height: ", "0", lambda x: change_val(x, 0)],
-    [[0.9, 0.7, 0.05, 0.05], "Velocity: ", "10", lambda x: change_val(x, 1)],
-    [[0.9, 0.6, 0.05, 0.05], "Angle: ", "30", lambda x: change_val(x, 2)],
-    [[0.9, 0.5, 0.05, 0.05], "Mass: ", "10", lambda x: change_val(x, 3)],
-    [[0.9, 0.4, 0.05, 0.05], "Area: ", "0.5", lambda x: change_val(x, 4)],
-    [[0.9, 0.3, 0.05, 0.05], "Drag Coefficient: ", "0.49", lambda x: change_val(x, 5)]
+    [[0.9, 0.7, 0.05, 0.05], "Height (m): ", "0", lambda x: change_val(x, 0)],
+    [[0.9, 0.6, 0.05, 0.05], "Velocity (m/s): ", "10", lambda x: change_val(x, 1)],
+    [[0.9, 0.5, 0.05, 0.05], "Angle (°): ", "30", lambda x: change_val(x, 2)],
+    [[0.9, 0.4, 0.05, 0.05], "Mass (kg): ", "10", lambda x: change_val(x, 3)],
+    [[0.9, 0.3, 0.05, 0.05], "Area (m²): ", "0.5", lambda x: change_val(x, 4)],
+    [[0.9, 0.2, 0.05, 0.05], "Drag Coefficient: ", "0.49", lambda x: change_val(x, 5)]
 ]
 
 # Creating text boxes for data entry
