@@ -23,26 +23,19 @@ class Projectile {
 
 void calc_acceleration(double mass, double area, double v_x, double v_y, double drag_coeff, double& a_x, double& a_y) {
     // Calculating drag forces in x and y-directions using formula F = 0.5 * ρ * v^2 * C * A
-    double F_x = 0.5 * air_density * v_x * v_x * drag_coeff * area;
-    double F_y = 0.5 * air_density * v_y * v_y * drag_coeff * area;
+    // Speed and -0.5 used to ensure force is in opposite direction to velocity.
+    double speed_x = sqrt(v_x * v_x);
+    double speed_y = sqrt(v_y * v_y);
+
+    double F_x = -0.5 * air_density * v_x * speed_x * drag_coeff * area;
+    double F_y = -0.5 * air_density * v_y * speed_y * drag_coeff * area;
     
-    // Ensures acceleration is in opposite direction to velocity.
-    if (v_x < 0) {
-        a_x = F_x / mass;
-    }
-    else {
-        a_x = -F_x / mass;
-    }
+    // Calculting acceleration with F=ma
+    a_x = F_x / mass;
+    a_y = F_y / mass;
 
-    if (v_y < 0) {
-        a_y = F_y / mass;
-    }
-    else {
-        a_y = -F_y / mass;
-    }
-
-    // Adds acceleration due to gravity.
-    a_y = a_y - g;
+    // Adds acceleration due to gravity
+    a_y -= g;
 }
 
 float linear_interpolation(float prev_x, float prev_y, float x, float y) {
@@ -80,7 +73,7 @@ int main() {
                 projectiles[i].prev_x = projectiles[i].x;
                 projectiles[i].prev_y = projectiles[i].y;
 
-                // Calculating new acceleration using velocity verlet integration.
+                // Calculating new position using velocity verlet integration.
                 double new_a_x, new_a_y;
                 projectiles[i].x += projectiles[i].v_x * TimeStep + 0.5 * projectiles[i].a_x * TimeStep * TimeStep;
                 projectiles[i].y += projectiles[i].v_y * TimeStep + 0.5 * projectiles[i].a_y * TimeStep * TimeStep;
@@ -98,6 +91,7 @@ int main() {
                     // Using linear interpolation to estimate x value when y = 0 (projectile hits ground)
                     projectiles[i].x = linear_interpolation(projectiles[i].prev_x, projectiles[i].prev_y, 
                         projectiles[i].x, projectiles[i].y);
+                    projectiles[i].y = 0;
                     
                     std::cout << projectiles[i].x << " " << 0;
                     projectiles_ended ++;
