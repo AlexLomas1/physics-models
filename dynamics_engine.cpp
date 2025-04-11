@@ -23,7 +23,9 @@ class Projectile {
 
 void calc_acceleration(double mass, double area, double v_x, double v_y, double drag_coeff, double& a_x, double& a_y) {
     // Calculating drag forces in x and y-directions using formula F = 0.5 * ρ * v^2 * C * A
-    // Speed and -0.5 used to ensure force is in opposite direction to velocity.
+    /* Speed used as v * v would always give positive direction, v * speed however gives direction of 
+    velocity. So using v * speed, and multiplying force by -1, ensures force is in opposite direction to
+    velocity. */
     double speed_x = sqrt(v_x * v_x);
     double speed_y = sqrt(v_y * v_y);
 
@@ -44,12 +46,13 @@ float linear_interpolation(float prev_x, float prev_y, float x, float y) {
 }
 
 int main() {
-    Projectile projectiles[5];
+    Projectile projectiles[2];
     int projectile_count = 0;
     double TimeStep, h, u, angle, mass, area, drag_coeff;
 
     std::cin >> TimeStep;
 
+    // Receives projectile data from Python file.
     while (std::cin >> h >> u >> angle >> mass >> area >> drag_coeff && projectile_count < 2) {
         projectiles[projectile_count].init(h, u, angle, mass, area, drag_coeff);
         calc_acceleration(projectiles[projectile_count].mass, projectiles[projectile_count].area,

@@ -123,22 +123,21 @@ def change_val(new_val, index):
     current_data[index] = float(new_val)
     update_projectile_data(current_data, start=False)
 
-# Setting up the figure
+# Setting up the figure, and creating two axes to keep the text boxes seperated from main axis.
 fig = plt.figure(figsize=(8, 8))
 gs = gridspec.GridSpec(1, 2, width_ratios=[9, 1])
 ax = fig.add_subplot(gs[0])
-# Creating second axis to keep the text boxes seperated from main axis
 ax_input_boxes = fig.add_subplot(gs[1])
 ax_input_boxes.axis("off")
 
 text_boxes = []
 text_boxes_data = [
     [[0.9, 0.7, 0.05, 0.05], "Height (m): ", "0", lambda x: change_val(x, 0)],
-    [[0.9, 0.6, 0.05, 0.05], "Velocity (m/s): ", "10", lambda x: change_val(x, 1)],
-    [[0.9, 0.5, 0.05, 0.05], "Angle (°): ", "30", lambda x: change_val(x, 2)],
+    [[0.9, 0.6, 0.05, 0.05], "Velocity (m/s): ", "15", lambda x: change_val(x, 1)],
+    [[0.9, 0.5, 0.05, 0.05], "Angle (°): ", "60", lambda x: change_val(x, 2)],
     [[0.9, 0.4, 0.05, 0.05], "Mass (kg): ", "10", lambda x: change_val(x, 3)],
     [[0.9, 0.3, 0.05, 0.05], "Area (m²): ", "0.5", lambda x: change_val(x, 4)],
-    [[0.9, 0.2, 0.05, 0.05], "Drag Coefficient: ", "0.49", lambda x: change_val(x, 5)]
+    [[0.9, 0.2, 0.05, 0.05], "Drag Coefficient: ", "0.47", lambda x: change_val(x, 5)]
 ]
 
 # Creating text boxes for data entry
@@ -148,7 +147,7 @@ for text_box in text_boxes_data:
     data_input_box.on_submit(text_box[3])
     text_boxes.append(data_input_box) # Need to keep a reference to each box for it to remain responsive.
 
-current_data = [0, 10, 30, 10, 0.5, 0.49] # Default data, equivalent to the initial data in text boxes.
+current_data = [0, 15, 60, 10, 0.5, 0.47] # Default data, same as initial data in text boxes.
 
 update_projectile_data(current_data, start=True)
 plt.show()
