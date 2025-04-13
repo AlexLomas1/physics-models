@@ -7,9 +7,10 @@ This is a collection of computer models for systems pertaining to various differ
 - [Projectile Motion](#projectile-motion-model)
 
 ## 2D Solar System Model
-https://github.com/user-attachments/assets/f2d22f2d-db40-4eb2-9897-9c1be9c52a49
 
-https://github.com/user-attachments/assets/45a54b8c-f58e-4903-911f-f7c2039f5dde
+https://github.com/user-attachments/assets/bab34c75-d50d-478a-bd48-eba26047a6a7
+
+https://github.com/user-attachments/assets/ef4c7f38-a7b7-4cd3-b75c-be6c7cc8bb0a
 
 Files: `solar_system_2d_display.py`, `orbital_engine_2d.cpp`
 
@@ -59,7 +60,7 @@ Currently, all calculated coordinates for each planet remain stored for the enti
 
 ## Particle Decay Model
 
-https://github.com/user-attachments/assets/c27299bc-9b11-4581-b4eb-b78e5fef0bd5
+https://github.com/user-attachments/assets/e1f3163f-52cd-4e29-8e16-31c4a2d88a46
 
 Files: `particle_decay_display.py`, `particle_decay_monte_carlo.cpp`
 
@@ -91,7 +92,7 @@ For each undecayed nucleus, a (pseudo) random number is generated between $$0$$ 
 
 ## Projectile Motion Model
 
-https://github.com/user-attachments/assets/7b4b9fd5-87a1-47b9-8447-3ff86601c991
+https://github.com/user-attachments/assets/da028cc4-387d-4034-a39e-0e7faa7da52f
 
 Files: `projectile_motion_display.py`, `dynamics_engine.cpp`
 
