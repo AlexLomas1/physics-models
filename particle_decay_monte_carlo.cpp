@@ -5,10 +5,14 @@
 int main() {
     int N; // Number of particles not yet decayed.
     int decayed; // Number of particles decayed in one run.
+    float dt; // Time step.
     float decay_const;
 
     std::cin >> N;
+    std::cin >> dt;
     std::cin >> decay_const;
+
+    float decay_prob = decay_const * dt;
 
     std::random_device rd; // Generates a seed for the (pseudo-)random number generator.
     std::mt19937 gen(rd()); // Mersenne Twister generator, uses rd() as a seed.
@@ -19,7 +23,7 @@ int main() {
         for (int i=0; i < N; i++) {
             // Generates random number from 0 to 1.
             double r = dis(gen);
-            if (r < decay_const) {
+            if (r < decay_prob) {
                 decayed +=1;
             }
         }
