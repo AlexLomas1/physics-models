@@ -6,12 +6,13 @@ import time
 import subprocess
 
 class Planet:
-    def __init__(self, name, colour, diameter, initial_coords, initial_v, mass):
+    def __init__(self, name, colour, max_len, diameter, initial_coords, initial_v, mass):
         # Scales planet sizes with a quadratic-logarithmic function.
         self.planet_size = 0.75 * (math.log(diameter, 75))**2
         
         self.name = name
         self.colour = colour
+        self.max_len = max_len
 
         # Data values to be sent to orbital engine
         self.initial_x = initial_coords[0]
@@ -30,24 +31,24 @@ class Planet:
         self.y_values = []
 
 # Source for planets' masses, initial coordinates & velocities: https://ssd.jpl.nasa.gov/horizons/app.html
-Sun = Planet("Sun", "yellow", 1393000, [-1.068*(10**9), -4.117*(10**8)], 
+Sun = Planet("Sun", "yellow", 0, 1393000, [-1.068*(10**9), -4.117*(10**8)], 
             [9.305, -1.283*10], 1988410)
 Sun.planet_size = 25 # Manualy setting size of Sun.
-Mercury = Planet("Mercury", "grey", 4879, [-2.212*(10**10), -6.682*(10**10)], 
+Mercury = Planet("Mercury", "grey", 125, 4879, [-2.212*(10**10), -6.682*(10**10)], 
             [3.666*(10**4), -1.230*(10**4)], 0.3302)
-Venus = Planet("Venus", "khaki", 12104, [-1.086*(10**11), -3.784*(10**9)], 
+Venus = Planet("Venus", "khaki", 325, 12104, [-1.086*(10**11), -3.784*(10**9)], 
             [8.985*(10**2), -3.517*(10**4)], 4.8685)
-Earth = Planet("Earth", "blue", 12756, [-2.628*(10**10), 1.445*(10**11)], 
+Earth = Planet("Earth", "blue", 530, 12756, [-2.628*(10**10), 1.445*(10**11)], 
             [-2.983*(10**4), -5.220*(10**3)], 5.97219)
-Mars = Planet("Mars", "red", 6792, [2.069*(10**11), -3.561*(10**9)],
+Mars = Planet("Mars", "red", 990, 6792, [2.069*(10**11), -3.561*(10**9)],
             [1.304*(10**3), 2.628*(10**4)], 0.64171)
-Jupiter = Planet("Jupiter", "tan", 142984, [5.979*(10**11), 4.387*(10**11)],
+Jupiter = Planet("Jupiter", "tan", 215, 142984, [5.979*(10**11), 4.387*(10**11)],
             [-7.893*(10**3), 1.12*(10**4)], 1898.19)
-Saturn = Planet("Saturn", "wheat", 120526, [9.576*(10**11), 9.821*(10**11)],
+Saturn = Planet("Saturn", "wheat", 515, 120526, [9.576*(10**11), 9.821*(10**11)],
             [-7.420*(10**3), 6.726*(10**3)], 568.34)
-Uranus = Planet("Uranus", "lightblue", 51118, [2.158*(10**12), -2.055*(10**12)],
+Uranus = Planet("Uranus", "lightblue", 1475, 51118, [2.158*(10**12), -2.055*(10**12)],
             [4.647*(10**3), 4.614*(10**3)], 86.813)
-Neptune = Planet("Neptune", "mediumblue", 49528, [2.514*(10**12), -3.739*(10**12)],
+Neptune = Planet("Neptune", "mediumblue", 2890, 49528, [2.514*(10**12), -3.739*(10**12)],
             [4.475*(10**3), 3.063*(10**3)], 102.409)
 
 def switch_display(event):
@@ -134,10 +135,11 @@ def update(frame_num):
     # Updating position of each planet.
     for i in range(len(planets)):
         x, y = values[2*i], values[(2*i)+1]
-        planets[i].x_values.append(x)
-        planets[i].y_values.append(y)
-        planets[i].orbit_path.set_data(planets[i].x_values,planets[i].y_values)
         planets[i].marker.set_data([x], [y])
+        if len(planets[i].x_values) < planets[i].max_len:
+            planets[i].x_values.append(x)
+            planets[i].y_values.append(y)
+            planets[i].orbit_path.set_data(planets[i].x_values,planets[i].y_values)
 
     return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
 
