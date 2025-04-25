@@ -29,24 +29,26 @@ class Planet:
         self.x_values = []
         self.y_values = []
 
-# Source for planets' diameter and mass: https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html
-# Planets' initial coordinates & velocities (2000-01-01 data to 4sf): https://ssd.jpl.nasa.gov/horizons/app.html
+# Source for planets' masses, initial coordinates & velocities: https://ssd.jpl.nasa.gov/horizons/app.html
+Sun = Planet("Sun", "yellow", 1393000, [-1.068*(10**9), -4.117*(10**8)], 
+            [9.305, -1.283*10], 1988410)
+Sun.planet_size = 25 # Manualy setting size of Sun.
 Mercury = Planet("Mercury", "grey", 4879, [-2.212*(10**10), -6.682*(10**10)], 
-            [3.666*(10**4), -1.230*(10**4)], 0.330)
+            [3.666*(10**4), -1.230*(10**4)], 0.3302)
 Venus = Planet("Venus", "khaki", 12104, [-1.086*(10**11), -3.784*(10**9)], 
-            [8.985*(10**2), -3.517*(10**4)], 4.87)
+            [8.985*(10**2), -3.517*(10**4)], 4.8685)
 Earth = Planet("Earth", "blue", 12756, [-2.628*(10**10), 1.445*(10**11)], 
-            [-2.983*(10**4), -5.220*(10**3)], 5.97)
+            [-2.983*(10**4), -5.220*(10**3)], 5.97219)
 Mars = Planet("Mars", "red", 6792, [2.069*(10**11), -3.561*(10**9)],
-            [1.304*(10**3), 2.628*(10**4)], 0.642)
+            [1.304*(10**3), 2.628*(10**4)], 0.64171)
 Jupiter = Planet("Jupiter", "tan", 142984, [5.979*(10**11), 4.387*(10**11)],
-            [-7.893*(10**3), 1.12*(10**4)], 1898)
+            [-7.893*(10**3), 1.12*(10**4)], 1898.19)
 Saturn = Planet("Saturn", "wheat", 120526, [9.576*(10**11), 9.821*(10**11)],
-            [-7.420*(10**3), 6.726*(10**3)], 568)
+            [-7.420*(10**3), 6.726*(10**3)], 568.34)
 Uranus = Planet("Uranus", "lightblue", 51118, [2.158*(10**12), -2.055*(10**12)],
-            [4.647*(10**3), 4.614*(10**3)], 86.8)
+            [4.647*(10**3), 4.614*(10**3)], 86.813)
 Neptune = Planet("Neptune", "mediumblue", 49528, [2.514*(10**12), -3.739*(10**12)],
-            [4.475*(10**3), 3.063*(10**3)], 102)
+            [4.475*(10**3), 3.063*(10**3)], 102.409)
 
 def switch_display(event):
     global orbit_sim, ani, current_display, planets
@@ -64,10 +66,11 @@ def switch_display(event):
 
     if current_display == "Inner":
         current_display = "Outer"
-        planets = [Jupiter, Saturn, Uranus, Neptune]
+        planets = [Sun, Jupiter, Saturn, Uranus, Neptune]
     else:
         current_display = "Inner"
-        planets = [Mercury, Venus, Earth, Mars]
+        planets = [Sun, Mercury, Venus, Earth, Mars]
+    
     display_planets(current_display, planets)
 
 def display_planets(current_display, planets):
@@ -79,7 +82,6 @@ def display_planets(current_display, planets):
     ax.set_aspect("equal")
     ax.set_facecolor("black")
     ax.grid()
-    ax.plot(0, 0, color="yellow", marker ="o", markersize=25) # Plotting the sun at the centre.
 
     # For time steps: this is time step used in calculations by orbital engine, the animation is updated
     # once for every 10 time steps, in order to improve accuracy without making simulation slow.
@@ -111,7 +113,7 @@ def display_planets(current_display, planets):
     orbit_sim.stdin.close()
 
     ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
-    plt.legend(title="Planets", handles=[planet.marker for planet in planets], bbox_to_anchor=(1.8, 0.05))
+    plt.legend(title="Planets", handles=[planet.marker for planet in planets[-4:]], bbox_to_anchor=(1.8, 0.05))
 
     # Changing button label.
     global button
