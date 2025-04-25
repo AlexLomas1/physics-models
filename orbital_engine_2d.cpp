@@ -74,25 +74,31 @@ int main() {
     
     // Updating each planet's position using Velocity Verlet integration
     while (true) {
-        for (int i=0; i < planet_count; i++) {
+        // Position updated 1000 times before new position is output to allow for shorter time steps.
+        for (int k=0; k < 1000; k++) {
             // Updating each planet's current position
-            planets[i].x += planets[i].v_x * TimeStep + 0.5 * planets[i].a_x * TimeStep * TimeStep;
-            planets[i].y += planets[i].v_y * TimeStep + 0.5 * planets[i].a_y * TimeStep * TimeStep;
-        }
-
-        for (int i=0; i < planet_count; i++) {
-            /* Summing planet's accelerations due to other bodies. Only needs to check bodies with indexes
-            greater than it as previous bodies would have already calculated their acceleration due to
-            current body, and as these would be the same as the previous bodies exerts on the current body,
-            (just opposite in direction), these accelerations are added then to reduce redundant calculations. */
-            for (int j=i+1; j < planet_count; j++) {
-                // Planet objects passed by reference.
-                calc_accelerations(planets[i], planets[j]);
+            for (int i=0; i < planet_count; i++) {
+                planets[i].x += planets[i].v_x * TimeStep + 0.5 * planets[i].a_x * TimeStep * TimeStep;
+                planets[i].y += planets[i].v_y * TimeStep + 0.5 * planets[i].a_y * TimeStep * TimeStep;
             }
-            planets[i].v_x += 0.5 * (planets[i].a_x + planets[i].temp_a_x) * TimeStep;
-            planets[i].v_y += 0.5 * (planets[i].a_y + planets[i].temp_a_y) * TimeStep;
 
-            planets[i].update_acceleration();
+            for (int i=0; i < planet_count; i++) {
+                /* Summing planet's accelerations due to other bodies. Only need to check bodies at greater
+                indexes as previous bodies would have already calculated their acceleration due to current
+                body, and these would be the same as the previous bodies exerts on the current body, just
+                opposite in direction, so these accelerations are added then to reduce redundant calculations. */
+                for (int j=i+1; j < planet_count; j++) {
+                    // Planet objects passed by reference.
+                    calc_accelerations(planets[i], planets[j]);
+                }
+                planets[i].v_x += 0.5 * (planets[i].a_x + planets[i].temp_a_x) * TimeStep;
+                planets[i].v_y += 0.5 * (planets[i].a_y + planets[i].temp_a_y) * TimeStep;
+
+                planets[i].update_acceleration();
+            }
+        }
+        // Outputting new positions
+        for (int i=0; i < planet_count; i++) {
             // Converts coordinates to AU and prints them so Python file can read them.
             std::cout << planets[i].x/AU << " " << planets[i].y/AU;
             /* Ensures each coordinate is seperated by a space, but that last coordinate doesn't have

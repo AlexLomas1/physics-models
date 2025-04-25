@@ -84,16 +84,16 @@ def display_planets(current_display, planets):
     ax.grid()
 
     # For time steps: this is time step used in calculations by orbital engine, the animation is updated
-    # once for every 10 time steps, in order to improve accuracy without making simulation slow.
+    # once for every 1000 time steps, in order to improve accuracy without making simulation slow.
     if current_display == "Inner":
         ax.set_xlim(-2, 2)
         ax.set_ylim(-2, 2)
-        time_step = 7200 # 2 hours in seconds
+        time_step = 60 # 1 minute time step
         button_label = "Switch to Outer Planets"
     else:
         ax.set_xlim(-35, 35)
         ax.set_ylim(-35, 35)
-        time_step = 172800 # 2 days in seconds
+        time_step = 1800 # 30 minute time step
         button_label = "Switch to Inner Planets"
     
     # Runs the compiled 2D orbital engine file as a subprocess.
@@ -112,7 +112,7 @@ def display_planets(current_display, planets):
         orbit_sim.stdin.writelines([line])
     orbit_sim.stdin.close()
 
-    ani = animation.FuncAnimation(fig, update, frames=1000, interval=20, blit=True)
+    ani = animation.FuncAnimation(fig, update, frames=1000, interval=50, blit=True)
     plt.legend(title="Planets", handles=[planet.marker for planet in planets[-4:]], bbox_to_anchor=(1.8, 0.05))
 
     # Changing button label.
