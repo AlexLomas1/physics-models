@@ -17,39 +17,42 @@ class Planet:
         # Data values to be sent to orbital engine
         self.initial_x = initial_coords[0]
         self.initial_y = initial_coords[1]
+        self.initial_z = initial_coords[2]
         self.initial_v_x = initial_v[0]
         self.initial_v_y = initial_v[1]
+        self.initial_v_z = initial_v[2]
         self.mass = mass * 10**24
 
     def create_markers(self, ax):
         # Creating planet marker
-        self.marker, = ax.plot([], [], color=self.colour, marker="o", markersize=self.planet_size, label=self.name)
+        self.marker, = ax.plot([], [], [], color=self.colour, marker="o", markersize=self.planet_size, label=self.name)
         # Creating dashed line to display orbital path.
-        self.orbit_path, = ax.plot([], [], color=self.colour, linestyle="--", linewidth=0.5)
+        self.orbit_path, = ax.plot([], [], [], color=self.colour, linestyle="--", linewidth=0.5)
         # Storing coordinates for orbital path.
         self.x_values = []
         self.y_values = []
+        self.z_values = []
 
 # Source for planets' masses, initial coordinates & velocities: https://ssd.jpl.nasa.gov/horizons/app.html
-Sun = Planet("Sun", "yellow", 0, 1393000, [-1.068*(10**9), -4.117*(10**8)], 
-            [9.305, -1.283*10], 1988410)
-Sun.planet_size = 25 # Manualy setting size of Sun.
-Mercury = Planet("Mercury", "grey", 125, 4879, [-2.212*(10**10), -6.682*(10**10)], 
-            [3.666*(10**4), -1.230*(10**4)], 0.3302)
-Venus = Planet("Venus", "khaki", 325, 12104, [-1.086*(10**11), -3.784*(10**9)], 
-            [8.985*(10**2), -3.517*(10**4)], 4.8685)
-Earth = Planet("Earth", "blue", 530, 12756, [-2.628*(10**10), 1.445*(10**11)], 
-            [-2.983*(10**4), -5.220*(10**3)], 5.97219)
-Mars = Planet("Mars", "red", 990, 6792, [2.069*(10**11), -3.561*(10**9)],
-            [1.304*(10**3), 2.628*(10**4)], 0.64171)
-Jupiter = Planet("Jupiter", "tan", 215, 142984, [5.979*(10**11), 4.387*(10**11)],
-            [-7.893*(10**3), 1.12*(10**4)], 1898.19)
-Saturn = Planet("Saturn", "wheat", 515, 120526, [9.576*(10**11), 9.821*(10**11)],
-            [-7.420*(10**3), 6.726*(10**3)], 568.34)
-Uranus = Planet("Uranus", "lightblue", 1475, 51118, [2.158*(10**12), -2.055*(10**12)],
-            [4.647*(10**3), 4.614*(10**3)], 86.813)
-Neptune = Planet("Neptune", "mediumblue", 2890, 49528, [2.514*(10**12), -3.739*(10**12)],
-            [4.475*(10**3), 3.063*(10**3)], 102.409)
+Sun = Planet("Sun", "yellow", 0, 1393000, [-1.068*(10**9), -4.117*(10**8), 3.087*(10**7)], 
+            [9.305, -1.283*10, -1.632*(10**-1)], 1988410)
+Sun.planet_size = 10 # Manualy setting size of Sun.
+Mercury = Planet("Mercury", "grey", 125, 4879, [-2.212*(10**10), -6.682*(10**10), -3.462*(10**9)], 
+            [3.666*(10**4), -1.230*(10**4), -4.368*(10**3)], 0.3302)
+Venus = Planet("Venus", "khaki", 325, 12104, [-1.086*(10**11), -3.784*(10**9), 6.190*(10**9)], 
+            [8.985*(10**2), -3.517*(10**4), -5.320*(10**2)], 4.8685)
+Earth = Planet("Earth", "blue", 530, 12756, [-2.628*(10**10), 1.445*(10**11), 0], 
+            [-2.983*(10**4), -5.220*(10**3), 0], 5.97219)
+Mars = Planet("Mars", "red", 990, 6792, [2.069*(10**11), -3.561*(10**9), 0],
+            [1.304*(10**3), 2.628*(10**4), 0], 0.64171)
+Jupiter = Planet("Jupiter", "tan", 215, 142984, [5.979*(10**11), 4.387*(10**11), 0],
+            [-7.893*(10**3), 1.12*(10**4), 0], 1898.19)
+Saturn = Planet("Saturn", "wheat", 515, 120526, [9.576*(10**11), 9.821*(10**11), 0],
+            [-7.420*(10**3), 6.726*(10**3), 0], 568.34)
+Uranus = Planet("Uranus", "lightblue", 1475, 51118, [2.158*(10**12), -2.055*(10**12), 0],
+            [4.647*(10**3), 4.614*(10**3), 0], 86.813)
+Neptune = Planet("Neptune", "mediumblue", 2890, 49528, [2.514*(10**12), -3.739*(10**12), 0],
+            [4.475*(10**3), 3.063*(10**3), 0], 102.409)
 
 def switch_display(event):
     global orbit_sim, ani, current_display, planets
@@ -78,27 +81,29 @@ def display_planets(current_display, planets):
     global fig, ax, orbit_sim, ani
 
     # Setting up figure.
-    ax.set_xlabel("x / AU")
-    ax.set_ylabel("y / AU")
     ax.set_aspect("equal")
-    ax.set_facecolor("black")
+    ax.xaxis.set_pane_color((0.0, 0.0, 0.0, 1.0))
+    ax.yaxis.set_pane_color((0.0, 0.0, 0.0, 1.0))
+    ax.zaxis.set_pane_color((0.0, 0.0, 0.0, 1.0))
     ax.grid()
 
     # For time steps: this is time step used in calculations by orbital engine, the animation is updated
-    # once for every 1000 time steps, in order to improve accuracy without making simulation slow.
+    # once for every 10 time steps, in order to improve accuracy without making simulation slow.
     if current_display == "Inner":
-        ax.set_xlim(-2, 2)
-        ax.set_ylim(-2, 2)
-        time_step = 60 # 1 minute time step
+        ax.set(xlim3d=(-2, 2), xlabel="x / AU")
+        ax.set(ylim3d=(-2, 2), ylabel="y / AU")
+        ax.set(zlim3d=(-2, 2), zlabel="z / AU")
+        time_step = 60 # 1 minute in seconds
         button_label = "Switch to Outer Planets"
     else:
-        ax.set_xlim(-35, 35)
-        ax.set_ylim(-35, 35)
-        time_step = 1800 # 30 minute time step
+        ax.set(xlim3d=(-35, 35), xlabel="x / AU")
+        ax.set(ylim3d=(-35, 35), ylabel="y / AU")
+        ax.set(zlim3d=(-35, 35), zlabel="z / AU")
+        time_step = 1800 # 30 minutes in seconds
         button_label = "Switch to Inner Planets"
     
-    # Runs the compiled 2D orbital engine file as a subprocess.
-    orbit_sim = subprocess.Popen(["orbital_engine_2d.exe"], stdin=subprocess.PIPE, 
+    # Runs the compiled orbital engine file as a subprocess.
+    orbit_sim = subprocess.Popen(["orbital_engine.exe"], stdin=subprocess.PIPE, 
                                 stdout=subprocess.PIPE, text=True)
     
     # Sending time step to orbital engine.
@@ -107,9 +112,9 @@ def display_planets(current_display, planets):
     # Sending planet masses and initial coordinates and velocities to orbital engine.
     for planet in planets:
         planet.create_markers(ax)
-        data = [str(planet.initial_x), str(planet.initial_y), str(planet.initial_v_x), 
-                str(planet.initial_v_y), str(planet.mass)]
-        line = data[0] + " " + data[1] + " " + data[2] + " " + data[3] + " " + data[4] + "\n"
+        data = [str(planet.initial_x), str(planet.initial_y), str(planet.initial_z), str(planet.initial_v_x),
+                str(planet.initial_v_y), str(planet.initial_v_z), str(planet.mass)]
+        line = data[0]+" "+data[1]+" "+data[2]+" "+data[3]+" "+data[4]+" "+data[5]+" "+data[6]+"\n"
         orbit_sim.stdin.writelines([line])
     orbit_sim.stdin.close()
 
@@ -131,20 +136,22 @@ def update(frame_num):
         return [value for planet in planets for value in [planet.marker, planet.orbit_path]] 
     
     values = list(map(float, line.split()))
-    
+
     # Updating position of each planet.
     for i in range(len(planets)):
-        x, y = values[2*i], values[(2*i)+1]
-        planets[i].marker.set_data([x], [y])
+        x, y, z = values[3*i], values[(3*i)+1], values[(3*i)+2]
+        planets[i].marker.set_data_3d([x], [y],[z])
         if len(planets[i].x_values) < planets[i].max_len:
             planets[i].x_values.append(x)
             planets[i].y_values.append(y)
-            planets[i].orbit_path.set_data(planets[i].x_values,planets[i].y_values)
+            planets[i].z_values.append(z)
+            planets[i].orbit_path.set_data_3d(planets[i].x_values,planets[i].y_values,planets[i].z_values)
 
     return [value for planet in planets for value in [planet.marker, planet.orbit_path]]
 
 # Initialising figure and axes.
-fig, ax = plt.subplots(figsize=(8, 8))
+fig = plt.figure()
+ax = fig.add_subplot(projection="3d")
 
 # Creating button to allow for switching between displays.
 ax_button = plt.axes([0.4, 0.885, 0.225, 0.05]) 

@@ -6,16 +6,19 @@ const double G = 6.6743e-11; // Gravitational constant (m^{3}kg^{-1}s^{-2})
 
 class Planet {
     public:
-        double x, y, v_x, v_y, a_x, a_y, temp_a_x, temp_a_y, mass;
+        double x, y, z, v_x, v_y, v_z, a_x, a_y, a_z, temp_a_x, temp_a_y, temp_a_z, mass;
 
-        void init(double a, double b, double c, double d, double e) {
+        void init(double a, double b, double c, double d, double e, double f, double g) {
             x = a;
             y = b;
-            v_x = c;
-            v_y = d;
-            mass = e;
+            z = c;
+            v_x = d;
+            v_y = e;
+            v_z = f;
+            mass = g;
             temp_a_x = 0;
             temp_a_y = 0;
+            temp_a_z = 0;
         }
 
         void update_acceleration() {
@@ -23,9 +26,11 @@ class Planet {
             in next time step. */
             a_x = temp_a_x;
             a_y = temp_a_y;
+            a_z = temp_a_z;
 
             temp_a_x = 0;
             temp_a_y = 0;
+            temp_a_z = 0;
         }
 };
 
@@ -34,33 +39,37 @@ void calc_accelerations(Planet&planet_a, Planet&planet_b) {
     where G is the gravitational constant, m1 and m2 are the masses of the two bodies and r is the
     distance between them. */
     double dist_squared = (planet_a.x - planet_b.x) * (planet_a.x - planet_b.x) + 
-                        (planet_a.y - planet_b.y) * (planet_a.y - planet_b.y);
+                        (planet_a.y - planet_b.y) * (planet_a.y - planet_b.y) +
+                        (planet_a.z - planet_b.z) * (planet_a.z - planet_b.z);
     double F = G * planet_a.mass * planet_b.mass / dist_squared;
 
     // Resolving force exerted on A into x and y directions. Force on B is just opposite in direction.
     double dist = sqrt(dist_squared);
     double F_x = F * (planet_b.x - planet_a.x) / dist;
     double F_y = F * (planet_b.y - planet_a.y) / dist;
+    double F_z = F * (planet_b.z - planet_a.z) / dist;
 
     // Acceleration calculated using F = ma, opposite directions as planets are attracting each other.
     planet_a.temp_a_x += F_x / planet_a.mass;
     planet_a.temp_a_y += F_y / planet_a.mass;
+    planet_a.temp_a_z += F_z / planet_a.mass;
 
     planet_b.temp_a_x += -F_x / planet_b.mass;
     planet_b.temp_a_y += -F_y / planet_b.mass;
+    planet_b.temp_a_z += -F_z / planet_b.mass;
 }
 
 int main() {
     Planet planets[16]; // array to store Planet objects. This includes the sun.
     int planet_count = 0;
     int TimeStep;
-    double x, y, v_x, v_y, mass;
+    double x, y, z, v_x, v_y, v_z, mass;
 
     std::cin >> TimeStep;
 
     // Receives planetary data from Python file
-    while (std::cin >> x >> y >> v_x >> v_y >> mass && planet_count < 16) {
-        planets[planet_count].init(x, y, v_x, v_y, mass);
+    while (std::cin >> x >> y >> z >> v_x >> v_y >> v_z >> mass && planet_count < 16) {
+        planets[planet_count].init(x, y, z, v_x, v_y, v_z, mass);
         planet_count += 1;
     }
 
@@ -80,6 +89,7 @@ int main() {
             for (int i=0; i < planet_count; i++) {
                 planets[i].x += planets[i].v_x * TimeStep + 0.5 * planets[i].a_x * TimeStep * TimeStep;
                 planets[i].y += planets[i].v_y * TimeStep + 0.5 * planets[i].a_y * TimeStep * TimeStep;
+                planets[i].z += planets[i].v_z * TimeStep + 0.5 * planets[i].a_z * TimeStep * TimeStep;
             }
 
             for (int i=0; i < planet_count; i++) {
@@ -93,6 +103,7 @@ int main() {
                 }
                 planets[i].v_x += 0.5 * (planets[i].a_x + planets[i].temp_a_x) * TimeStep;
                 planets[i].v_y += 0.5 * (planets[i].a_y + planets[i].temp_a_y) * TimeStep;
+                planets[i].v_z += 0.5 * (planets[i].a_z + planets[i].temp_a_z) * TimeStep;
 
                 planets[i].update_acceleration();
             }
@@ -100,7 +111,7 @@ int main() {
         // Outputting new positions
         for (int i=0; i < planet_count; i++) {
             // Converts coordinates to AU and prints them so Python file can read them.
-            std::cout << planets[i].x/AU << " " << planets[i].y/AU;
+            std::cout << planets[i].x/AU << " " << planets[i].y/AU << " " << planets[i].z/AU;
             /* Ensures each coordinate is seperated by a space, but that last coordinate doesn't have
             a trailing space. */
             if (i != planet_count - 1) {
