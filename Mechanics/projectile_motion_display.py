@@ -96,7 +96,7 @@ class ProjectileSimulation:
         self.ax.grid()
         self.set_axes_limits(projectiles[0].initial_v, math.radians(projectiles[0].angle), projectiles[0].initial_y)
 
-        self.setup_projectile_engine("dynamics_engine.exe", projectiles, time_step=0.025)
+        self.setup_projectile_engine("Mechanics/dynamics_engine.exe", projectiles, time_step=0.025)
 
         self.ani = animation.FuncAnimation(self.fig, lambda x: self.update(projectiles, x), frames=1000, 
                                            interval=20, blit=True)

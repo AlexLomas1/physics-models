@@ -113,7 +113,7 @@ class OrbitSimulation:
             self.ax.set(xlim3d=(-40, 40), ylim3d=(-40, 40), zlim3d=(-40, 40))
             time_step = 7200 # 2 hours in seconds
 
-        self.setup_orbital_engine("orbital_engine.exe", all_bodies, displayed, time_step)
+        self.setup_orbital_engine("Astrophysics/orbital_engine.exe", all_bodies, displayed, time_step)
 
         self.ani = animation.FuncAnimation(self.fig, lambda x: self.update(displayed, x), frames=1000, 
                                            interval=50, blit=True)
@@ -166,4 +166,4 @@ class OrbitSimulation:
         self.orbital_engine.terminate()
         self.orbital_engine.wait()
 
-solar_system_sim = OrbitSimulation("solar_system_data.txt")
+solar_system_sim = OrbitSimulation("Astrophysics/solar_system_data.txt")

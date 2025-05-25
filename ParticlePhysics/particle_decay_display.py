@@ -54,7 +54,8 @@ class ParticleDecaySimulation:
         self.x_data = [0]
         self.y_data = [self.current_data[0]]
 
-        self.setup_monte_carlo("particle_decay_monte_carlo.exe", current_data[0], current_data[1], current_data[2])
+        self.setup_monte_carlo("ParticlePhysics/particle_decay_monte_carlo.exe", current_data[0], 
+                               current_data[1], current_data[2])
 
         calc_y_values = []
         for x in range(0, 51):
