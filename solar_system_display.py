@@ -21,148 +21,149 @@ class DisplayedBody(Body):
     def create_markers(self, ax):
         # Creating planet marker
         self.marker, = ax.plot([], [], [], color=self.colour, marker="o", markersize=self.marker_size, label=self.name)
-        # Creating dashed line to display orbital path trail.
+        # Creating dashed line to display orbital path.
         self.orbit_path, = ax.plot([], [], [], color=self.colour, linestyle="--", linewidth=0.5)
         # Storing coordinates for orbital path.
         self.x_values, self.y_values, self.z_values = [], [], []
 
-inner = []
-outer = []
-not_displayed = []
+class OrbitSimulation:
+    def __init__(self, file_name):
+        self.current_display = "Start"
+        self.load_data(file_name)
+        self.init_plot()
+        self.switch_display()
+        plt.show()
+        self.exit()
 
-with open("solar_system_data.txt", "r") as initial_data:
-    for line in initial_data:
-        if line.startswith("|  # Name") or line.startswith("|:"):
-            continue # Skipping first two lines
+    def load_data(self, file_name):
+        """Reading data for bodies and storing them as objects in appropriate list."""
+        def parse_line(line):
+            data = [x.strip() for x in line.split("|") if x.strip() != ""]
+            x, y, z, vx, vy, vz, mass = list(map(float, data[5:]))
 
-        data = [x.strip() for x in line.split("|") if x.strip() != ""]
+            if data[1] != "None":
+                name, colour, marker_size, trail_len = data[0], data[2], float(data[3]), int(data[4])
+                return DisplayedBody(name, colour, marker_size, trail_len, [x, y, z], [vx, vy, vz], mass), data[1]
+            else:
+                return Body([x, y, z], [vx, vy, vz], mass), "None"
 
-        name = data[0]
-        x, y, z = list(map(float, data[5:8]))
-        vx, vy, vz = list(map(float, data[8:11]))
-        mass = float(data[11])
+        self.inner = []
+        self.outer = []
+        self.not_displayed = []
 
-        if data[1] != "None":
-            colour, marker_size, trail_len = data[2], float(data[3]), int(data[4])
-            new_body = DisplayedBody(name, colour, marker_size, trail_len, [x, y, z], [vx, vy, vz], mass)
+        with open(file_name, "r") as initial_data:
+            for line in initial_data:
+                if line.startswith("|  # Name") or line.startswith("|:"):
+                    continue # Skipping first two lines as they don't contain data
 
-            if data[1] == "Inner" or data[1] == "Both":
-                inner.append(new_body)
-            if data[1] == "Outer" or data[1] == "Both":
-                outer.append(new_body)
+                new_body, display_type = parse_line(line)
+
+                if display_type in ["Inner", "Both"]: 
+                    self.inner.append(new_body)
+                if display_type in ["Outer", "Both"]: 
+                    self.outer.append(new_body)
+                elif display_type == "None": 
+                    self.not_displayed.append(new_body)
+    
+    def init_plot(self):
+        """Initialising figure and axes, and button for switching between displays"""
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(projection="3d")
+
+        ax_button = plt.axes([0.4, 0.885, 0.225, 0.05])
+        self.button = Button(ax_button, "")
+        self.button.on_clicked(self.switch_display)
+
+    def switch_display(self, event=None):
+        """Switch between displaying inner and outer planets."""
+        if self.current_display != "Start":
+            # Closing current animation and subprocess so new animation can be started.
+            self.ani.event_source.stop()
+            self.ax.clear()
+            self.orbital_engine.stdout.close()
+            self.orbital_engine.terminate()
+            self.orbital_engine.wait()
+            time.sleep(0.1) # Prevents immediate reopening of orbital engine.
+        
+        if self.current_display == "Inner":
+            self.current_display = "Outer"
+            all_bodies = self.outer + self.inner[1:] + self.not_displayed
+            displayed = self.outer
+        else: # Inner displayed if current_display is Outer or Start
+            self.current_display = "Inner"
+            all_bodies = self.inner + self.outer[1:] + self.not_displayed
+            displayed = self.inner
+
+        self.display_planets(self.current_display, all_bodies, displayed)
+
+    def display_planets(self, current_display, all_bodies, displayed):
+        """Setting up display settings and starting animation."""
+        # Setting up axes, and setting panes to black
+        self.ax.set_aspect("equal")
+        self.ax.xaxis.set_pane_color((0.0, 0.0, 0.0, 1.0))
+        self.ax.yaxis.set_pane_color((0.0, 0.0, 0.0, 1.0))
+        self.ax.zaxis.set_pane_color((0.0, 0.0, 0.0, 1.0))
+        self.ax.grid()
+        self.ax.set(xlabel="x / AU", ylabel="y / AU", zlabel="z / AU")
+
+        if current_display == "Inner":
+            self.ax.set(xlim3d=(-2, 2), ylim3d=(-2, 2), zlim3d=(-2, 2))
+            time_step = 60 # 1 minute in seconds
         else:
-            new_body = Body([x, y, z], [vx, vy, vz], mass)
-            not_displayed.append(new_body)
+            self.ax.set(xlim3d=(-40, 40), ylim3d=(-40, 40), zlim3d=(-40, 40))
+            time_step = 7200 # 2 hours in seconds
 
-def switch_display(event):
-    global orbit_sim, ani, current_display
+        self.setup_orbital_engine("orbital_engine.exe", all_bodies, displayed, time_step)
 
-    if current_display != "Start":
-        # Closing current animation and subprocess so new animation can be started.
-        ani.event_source.stop()
-        ax.clear()
-        orbit_sim.stdout.close()
-        orbit_sim.terminate()
-        orbit_sim.wait()
-        time.sleep(0.1) # Prevents immediate reopening of orbital engine.
+        self.ani = animation.FuncAnimation(self.fig, lambda x: self.update(displayed, x), frames=1000, 
+                                           interval=50, blit=True)
+        
+        # Creating legend, with all displayed bodies except the Sun.
+        plt.legend(title="Legend", handles=[body.marker for body in displayed[1:]], bbox_to_anchor=(1.8, 0.05))
 
-    global inner, outer, not_displayed
-    if current_display == "Inner":
-        current_display = "Outer"
-        bodies = outer + inner[1:len(inner)] + not_displayed
-        displayed = outer
-    else: # Inner displayed if switched from outer or simulation just started
-        current_display = "Inner"
-        bodies = inner + outer[1:len(inner)] + not_displayed
-        displayed = inner
+        button_label = "Switch to " + ("Inner" if current_display == "Outer" else "Outer") + " Planets"
+        self.button.label.set_text(button_label)
     
-    display_planets(current_display, bodies, displayed)
-
-def display_planets(current_display, bodies, displayed):
-    global fig, ax, orbit_sim, ani
-
-    # Setting up axes, and setting panes to black
-    ax.set_aspect("equal")
-    ax.xaxis.set_pane_color((0.0, 0.0, 0.0, 1.0))
-    ax.yaxis.set_pane_color((0.0, 0.0, 0.0, 1.0))
-    ax.zaxis.set_pane_color((0.0, 0.0, 0.0, 1.0))
-    ax.grid()
-
-    # For time steps: this is time step used in calculations by orbital engine, the animation is updated
-    # once for every 10 time steps, in order to improve accuracy without making simulation slow.
-    ax.set(xlabel="x / AU", ylabel="y / AU", zlabel="z / AU")
-    if current_display == "Inner":
-        ax.set(xlim3d=(-2, 2), ylim3d=(-2, 2), zlim3d=(-2, 2))
-        time_step = 60 # 1 minute in seconds
-        button_label = "Switch to Outer Planets"
-    else:
-        ax.set(xlim3d=(-40, 40), ylim3d=(-40, 40), zlim3d=(-40, 40))
-        time_step = 7200 # 2 hours in seconds
-        button_label = "Switch to Inner Planets"
-    
-    # Runs the compiled orbital engine file as a subprocess.
-    orbit_sim = subprocess.Popen(["orbital_engine.exe"], stdin=subprocess.PIPE, 
+    def setup_orbital_engine(self, orbit_engine_path, all_bodies, displayed, time_step,):
+        """Runs the compiled orbital engine file as a subprocess, and sends the time step and initial
+        data for the bodies to the orbital engine."""
+        self.orbital_engine = subprocess.Popen([orbit_engine_path], stdin=subprocess.PIPE, 
                                 stdout=subprocess.PIPE, text=True)
     
-    # Sending time step to orbital engine.
-    orbit_sim.stdin.writelines([(str(time_step)+"\n")])
+        self.orbital_engine.stdin.writelines([(str(time_step)+"\n")])
 
-    # Sending masses, initial coordinates, and initial velocities to orbital engine.
-    for body in bodies:
-        if body in displayed:
-            body.create_markers(ax)
-        data = [str(body.initial_x), str(body.initial_y), str(body.initial_z), str(body.initial_vx),
+        for body in all_bodies:
+            if body in displayed:
+                body.create_markers(self.ax)
+            data = [str(body.initial_x), str(body.initial_y), str(body.initial_z), str(body.initial_vx),
                 str(body.initial_vy), str(body.initial_vz), str(body.mass)]
-        line = (" ".join(data)) + "\n"
-        orbit_sim.stdin.writelines([line])
-    orbit_sim.stdin.close()
+            line = (" ".join(data)) + "\n"
+            self.orbital_engine.stdin.writelines([line])
+        self.orbital_engine.stdin.close()
 
-    ani = animation.FuncAnimation(fig, lambda x: update(displayed, x), frames=1000, interval=50, blit=True)
-    plt.legend(title="Legend", handles=[body.marker for body in displayed[1:]], bbox_to_anchor=(1.8, 0.05))
-
-    # Changing button label.
-    global button
-    button.label.set_text(button_label)
-
-    plt.draw()
-
-# frame_num is required for Matplotlib animation, even if it isn't used.
-def update(displayed, frame_num):
-    # Reads a line of output from orbital engine.
-    line = orbit_sim.stdout.readline().strip()
-    if not line:
-        # Stop if no more data.
-        return [value for body in displayed for value in [body.marker, body.orbit_path]] 
+    def update(self, displayed, frame_num):
+        """Reads data output from orbital engine and updates the position of each of the displayed bodes."""
+        line = self.orbital_engine.stdout.readline().strip()
+        if not line: # Stop if no more data.
+            return [value for body in displayed for value in [body.marker, body.orbit_path]] 
     
-    values = list(map(float, line.split()))
+        values = list(map(float, line.split()))
 
-    # Updating position of each planet.
-    for i in range(len(displayed)):
-        x, y, z = values[3*i], values[(3*i)+1], values[(3*i)+2]
-        displayed[i].marker.set_data_3d([x], [y], [z])
-        if len(displayed[i].x_values) < displayed[i].trail_len:
-            displayed[i].x_values.append(x)
-            displayed[i].y_values.append(y)
-            displayed[i].z_values.append(z)
-            displayed[i].orbit_path.set_data_3d(displayed[i].x_values,displayed[i].y_values,displayed[i].z_values)
+        for i in range(len(displayed)):
+            x, y, z = values[3*i], values[(3*i)+1], values[(3*i)+2]
+            displayed[i].marker.set_data_3d([x], [y], [z])
+            if len(displayed[i].x_values) < displayed[i].trail_len:
+                displayed[i].x_values.append(x)
+                displayed[i].y_values.append(y)
+                displayed[i].z_values.append(z)
+                displayed[i].orbit_path.set_data_3d(displayed[i].x_values,displayed[i].y_values,displayed[i].z_values)
 
-    return [value for body in displayed for value in [body.marker, body.orbit_path]]
+        return [value for body in displayed for value in [body.marker, body.orbit_path]]
+    
+    def exit(self):
+        """Ensures subprocess is closed before ending simulation."""
+        self.orbital_engine.stdout.close()
+        self.orbital_engine.terminate()
+        self.orbital_engine.wait()
 
-# Initialising figure and axes.
-fig = plt.figure()
-ax = fig.add_subplot(projection="3d")
-
-# Creating button to allow for switching between displays.
-ax_button = plt.axes([0.4, 0.885, 0.225, 0.05]) 
-button = Button(ax_button, "Switch to Outer Planets")
-button.on_clicked(switch_display)
-
-current_display = "Start"
-switch_display(None)
-plt.show()
-
-# Ensures subprocess is closed before ending.
-if orbit_sim:
-    orbit_sim.stdout.close()
-    orbit_sim.terminate()
-    orbit_sim.wait()
+solar_system_sim = OrbitSimulation("solar_system_data.txt")
